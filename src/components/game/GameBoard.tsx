@@ -284,7 +284,7 @@ const GameBoard: React.FC = () => {
       
       // Only generate new food if all food is eaten AND all collectibles are eaten
       if (newFood.length === 0 && collectibles.length === 0) {
-        const additionalFood = [];
+        const additionalFood: React.SetStateAction<FoodItem[]> | undefined = [];
         for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
           additionalFood.push(generateFood(newSnake, additionalFood, collectibles));
         }
@@ -720,7 +720,7 @@ const GameBoard: React.FC = () => {
           
           <div className="mt-4 text-center">
             <p className="font-pixel text-xs text-muted-foreground">
-              Use arrow keys to control the snake. Press 'H' for hints.
+              Use arrow keys to control the snake. Press &apos;H&apos; for hints.
             </p>
             <p className="font-pixel text-[10px] text-muted-foreground/50 mt-1">
               Collect items and sell them for coins or to upgrade your inventory!

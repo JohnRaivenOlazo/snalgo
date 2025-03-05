@@ -12,7 +12,7 @@ const Inventory: React.FC<InventoryProps> = ({
   onDeleteItem,
   onCapacityChange
 }) => {
-  const [sortBy, setSortBy] = useState<'value' | 'weight' | 'type' | 'timestamp'>('timestamp');
+  
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [sortSteps, setSortSteps] = useState<SortStep<InventoryItem>[]>([]);
   const [currentSortStep, setCurrentSortStep] = useState<number>(-1);
@@ -48,7 +48,6 @@ const Inventory: React.FC<InventoryProps> = ({
     if (sortBy === sortBy) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortBy(sortBy);
       setSortOrder('asc');
     }
     setSearchSteps([]);
