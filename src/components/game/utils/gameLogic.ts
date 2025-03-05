@@ -2,7 +2,6 @@ import {
   Direction, 
   FoodItem, 
   FoodType, 
-  GameState, 
   InventoryItem, 
   Position, 
   SnakeSegment, 
