@@ -510,56 +510,6 @@ const GameBoard: React.FC = () => {
             </PixelButton>
           </div>
           
-          <div className="md:hidden mt-4">
-            <div className="flex flex-col items-center gap-2">
-              <PixelButton
-                onClick={() => handleDirectionButton(Direction.UP)}
-                className="w-12 h-12 flex items-center justify-center p-0"
-                disabled={gameState !== GameState.PLAYING}
-              >
-                <ChevronUp size={20} />
-              </PixelButton>
-              
-              <div className="flex gap-2">
-                <PixelButton
-                  onClick={() => handleDirectionButton(Direction.LEFT)}
-                  className="w-12 h-12 flex items-center justify-center p-0"
-                  disabled={gameState !== GameState.PLAYING}
-                >
-                  <ChevronLeft size={20} />
-                </PixelButton>
-                
-                <PixelButton
-                  onClick={() => handleDirectionButton(Direction.DOWN)}
-                  className="w-12 h-12 flex items-center justify-center p-0"
-                  disabled={gameState !== GameState.PLAYING}
-                >
-                  <ChevronDown size={20} />
-                </PixelButton>
-                
-                <PixelButton
-                  onClick={() => handleDirectionButton(Direction.RIGHT)}
-                  className="w-12 h-12 flex items-center justify-center p-0"
-                  disabled={gameState !== GameState.PLAYING}
-                >
-                  <ChevronRight size={20} />
-                </PixelButton>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-4">
-            <PixelButton 
-              onClick={calculateHint}
-              disabled={gameState !== GameState.PLAYING || (food.length === 0 && collectibles.length === 0)}
-              variant="secondary"
-              className="w-full"
-            >
-              <Lightbulb size={16} className="mr-2" />
-              Optimize Path (TSP)
-            </PixelButton>
-          </div>
-          
           <div className="flex text-center justify-center mt-2 text-[8px] font-pixel text-muted-foreground">
             <p>Food eaten: {foodEatenSinceLastCollectible}/{COLLECTIBLE_THRESHOLD} until next collectible</p>
           </div>
@@ -718,6 +668,56 @@ const GameBoard: React.FC = () => {
             </div>
           </PixelatedContainer>
           
+          <div className="mt-4">
+            <PixelButton 
+              onClick={calculateHint}
+              disabled={gameState !== GameState.PLAYING || (food.length === 0 && collectibles.length === 0)}
+              variant="secondary"
+              className="w-full"
+            >
+              <Lightbulb size={16} className="mr-2" />
+              Optimize Path (TSP)
+            </PixelButton>
+          </div>
+          
+          <div className="md:hidden mt-4">
+            <div className="flex flex-col items-center gap-2">
+              <PixelButton
+                onClick={() => handleDirectionButton(Direction.UP)}
+                className="w-12 h-12 flex items-center justify-center p-0"
+                disabled={gameState !== GameState.PLAYING}
+              >
+                <ChevronUp size={20} />
+              </PixelButton>
+              
+              <div className="flex gap-2">
+                <PixelButton
+                  onClick={() => handleDirectionButton(Direction.LEFT)}
+                  className="w-12 h-12 flex items-center justify-center p-0"
+                  disabled={gameState !== GameState.PLAYING}
+                >
+                  <ChevronLeft size={20} />
+                </PixelButton>
+                
+                <PixelButton
+                  onClick={() => handleDirectionButton(Direction.DOWN)}
+                  className="w-12 h-12 flex items-center justify-center p-0"
+                  disabled={gameState !== GameState.PLAYING}
+                >
+                  <ChevronDown size={20} />
+                </PixelButton>
+                
+                <PixelButton
+                  onClick={() => handleDirectionButton(Direction.RIGHT)}
+                  className="w-12 h-12 flex items-center justify-center p-0"
+                  disabled={gameState !== GameState.PLAYING}
+                >
+                  <ChevronRight size={20} />
+                </PixelButton>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-4 text-center">
             <p className="font-pixel text-xs text-muted-foreground">
               Use arrow keys to control the snake. Press &apos;H&apos; for hints.

@@ -12,10 +12,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Constants
 export const GRID_SIZE = 20;
-export const CELL_SIZE = 18;
+export const CELL_SIZE = 20;
 export const INITIAL_SNAKE_LENGTH = 3;
 export const INITIAL_SPEED = 200;
-export const MAX_STOMACH_CAPACITY = 100;
+export const MAX_STOMACH_CAPACITY = 10;
 export const MAX_FOOD_ITEMS = 3;
 export const MAX_COLLECTIBLES = 1;
 export const COLLECTIBLE_THRESHOLD = 3;
