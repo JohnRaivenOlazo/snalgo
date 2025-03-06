@@ -596,7 +596,7 @@ const GameBoard: React.FC = () => {
               <Food food={food} collectibles={collectibles} />
               
               {gameState !== GameState.PLAYING && (
-                <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
+                <div className="absolute top-0 left-0 w-full h-full bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
                   {gameState === GameState.READY && (
                     <div className="flex flex-col items-center text-center">
                       <h2 className="font-pixel text-xl text-white mb-4 pixel-text">
