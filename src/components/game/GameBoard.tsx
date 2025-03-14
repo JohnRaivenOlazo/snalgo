@@ -103,19 +103,19 @@ const GameBoard: React.FC = () => {
     setCollectibles([initialCollectible]);
     setFoodEatenSinceLastCollectible(0);
     setGameState(GameState.READY);
-    setInventory([]);
     setHint([]);
-    setStats({
+    setStats((prev) => ({
+      ...prev,
       score: 0,
       highScore: localStorage.getItem("snakeHighScore")
         ? parseInt(localStorage.getItem("snakeHighScore") || "0")
         : 0,
       foodEaten: 0,
-      coinsCollected: 0,
-      inventoryCapacity: MAX_STOMACH_CAPACITY,
-      inventoryCurrentWeight: 0,
+      coinsCollected: prev.coinsCollected,
+      inventoryCapacity: prev.inventoryCapacity,
+      inventoryCurrentWeight: prev.inventoryCurrentWeight,
       level: 1,
-    });
+    }));
 
     hintActiveRef.current = false;
   }, []);
