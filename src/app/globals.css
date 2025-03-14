@@ -70,7 +70,6 @@
   --animate-rotate-slow: rotate-slow 8s linear infinite;
   --animate-bounce-subtle: bounce-subtle 2s infinite ease-in-out;
   --animate-glitch: glitch 0.8s ease-in-out;
-  --animate-blink: blink 1.5s infinite;
 
   @keyframes accordion-down {
     from {
@@ -248,15 +247,6 @@
     }
     100% {
       transform: translate(0);
-    }
-  }
-  @keyframes blink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.6;
     }
   }
 }
