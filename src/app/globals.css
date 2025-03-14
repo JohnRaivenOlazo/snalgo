@@ -323,6 +323,51 @@
     @apply border-border;
   }
 
+  /* Pixelated Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+    border: 2px solid hsl(var(--border));
+    image-rendering: pixelated;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--game-snake)) 0%,
+      hsl(var(--game-snake)) 50%,
+      hsl(var(--game-snake)) 100%
+    );
+    border: 2px solid hsl(var(--border));
+    border-radius: 0;
+    image-rendering: pixelated;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--game-snake-head)) 0%,
+      hsl(var(--game-snake-head)) 50%,
+      hsl(var(--game-snake-head)) 100%
+    );
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: hsl(var(--background));
+    border: 2px solid hsl(var(--border));
+    image-rendering: pixelated;
+  }
+
+  /* Firefox Scrollbar Styles */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--game-snake)) hsl(var(--background));
+  }
+
   body {
     @apply bg-background text-foreground;
     image-rendering: pixelated;
