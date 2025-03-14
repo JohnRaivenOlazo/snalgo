@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Store, HelpCircle, Home } from 'lucide-react';
-
+import Image from 'next/image';
 const Navbar = () => {
   const pathname = usePathname();
 
@@ -19,6 +19,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
+              <Image src="/snalgo.png" alt="Snalgo Logo" className="mb-1" width={32} height={32} />
               <span className="text-xl font-pixel text-white">
                 Sn<span className="text-game-snake">algo</span>
               </span>

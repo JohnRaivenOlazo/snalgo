@@ -8,7 +8,7 @@ const Home = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
       <Navbar />
-      <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="flex-1 py-8 pt-24 px-4 sm:px-6 lg:px-8 relative z-10">
         <header className="flex flex-col items-center mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-pixel text-white pixel-text inline-block relative group">
             Sn<span className="text-game-snake group-hover:animate-snake-move">algo</span>
