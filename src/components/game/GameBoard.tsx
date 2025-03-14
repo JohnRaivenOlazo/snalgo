@@ -687,11 +687,8 @@ const GameBoard: React.FC = () => {
                 <div className="absolute top-0 left-0 w-full h-full bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
                   {gameState === GameState.READY && (
                     <div className="flex flex-col items-center text-center">
-                      <h2 className="font-pixel text-xl text-white mb-4 pixel-text">
-                        Smart Snake Quest
-                      </h2>
                       <p className="font-pixel text-sm text-white mb-6">
-                        Use arrow keys to navigate
+                        Use &apos;arrow keys&apos; to control the snake!
                       </p>
                       <PixelButton onClick={startGame} size="lg">
                         Start Game
