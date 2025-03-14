@@ -522,7 +522,7 @@ const GameBoard: React.FC = () => {
         <PixelatedContainer className="p-4 flex flex-col gap-4">
           <div className="grid grid-cols-4 gap-4 mt-2">
             <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Star className="text-yellow-500" size={16} />
                 <span className="font-pixel text-xs text-white">Score</span>
               </div>
@@ -532,7 +532,7 @@ const GameBoard: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Trophy className="text-yellow-500" size={16} />
                 <span className="font-pixel text-xs text-white">Best</span>
               </div>
@@ -542,7 +542,7 @@ const GameBoard: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Coins className="text-yellow-500" size={16} />
                 <span className="font-pixel text-xs text-white">Coins</span>
               </div>
@@ -552,7 +552,7 @@ const GameBoard: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <HeartPulse className="text-red-500" size={16} />
                 <span className="font-pixel text-xs text-white">Length</span>
               </div>
