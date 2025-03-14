@@ -156,7 +156,7 @@ const Inventory: React.FC<InventoryProps> = ({
       <div className="flex items-center justify-between border-b border-game-border pb-2">
         <div className="flex items-center gap-2">
           <Package size={14} className="text-primary animate-pulse" />
-          <h3 className="font-pixel text-xs md:text-sm text-white">Collectibles</h3>
+          <h3 className="font-pixel text-xs md:text-sm text-white">Inventory</h3>
         </div>
         <div className="text-xs font-pixel text-white relative">
           <span className="animate-pulse-glow px-1.5 py-0.5 rounded">

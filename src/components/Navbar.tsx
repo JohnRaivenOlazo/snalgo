@@ -17,9 +17,9 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex-shrink-0">
+          <div className="flex items-center justify-center flex-shrink-0">
             <Link href="/" className="flex items-center">
-              <Image src="/snalgo.png" alt="Snalgo Logo" className="mb-1" width={32} height={32} />
+              <Image src="/snalgo.png" alt="Snalgo Logo" width={32} height={32} />
               <span className="text-xl font-pixel text-white">
                 Sn<span className="text-game-snake">algo</span>
               </span>

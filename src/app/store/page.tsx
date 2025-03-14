@@ -1,30 +1,16 @@
 'use client'
 import React from 'react';
-import { Coins, Zap, Shield, Star } from 'lucide-react';
+import { Coins, Package } from 'lucide-react';
 
 const StorePage = () => {
   const upgrades = [
     {
-      name: 'Speed Boost',
-      description: 'Increase snake movement speed',
-      price: 100,
-      icon: Zap,
+      name: 'Upgrade Capacity',
+      description: 'Increase inventory capacity by 10',
+      price: 10,
+      icon: Package,
       color: 'text-yellow-400',
-    },
-    {
-      name: 'Shield',
-      description: 'Protection against one collision',
-      price: 200,
-      icon: Shield,
-      color: 'text-blue-400',
-    },
-    {
-      name: 'Double Points',
-      description: '2x points multiplier',
-      price: 300,
-      icon: Star,
-      color: 'text-purple-400',
-    },
+    }
   ];
 
   return (
