@@ -186,8 +186,7 @@ const GameBoard: React.FC = () => {
           coinsCollected: prev.coinsCollected + item.sellValue!,
           inventoryCurrentWeight: prev.inventoryCurrentWeight - item.weight,
         }));
-        console.log(`Sold for ${item.sellValue} coins!`);
-        toast(`Sold for ${item.sellValue} coins!`);
+        toast.success(`Sold for ${item.sellValue} coins!`);
       }
 
       return prevInventory.filter((i) => i.id !== itemId);
