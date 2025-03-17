@@ -52,7 +52,6 @@ const Food: React.FC<FoodProps> = ({ food, collectibles }) => {
         >
           <div className="relative">
             {getFoodIcon(item.type)}
-            <div className="absolute -bottom-1 -right-1 w-2 h-2 rounded-full bg-white/30 animate-pulse"></div>
           </div>
         </div>
       ))}

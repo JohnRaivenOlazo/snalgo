@@ -41,8 +41,6 @@ import {
   tspNearestNeighbor,
 } from "@/components/game/utils/algorithms";
 import {
-  Play,
-  Pause,
   RotateCcw,
   ChevronUp,
   ChevronDown,
@@ -134,18 +132,6 @@ const GameBoard: React.FC = () => {
       boardRef.current.focus();
     }
   }, [gameState, initGame]);
-
-  const pauseGame = useCallback(() => {
-    if (gameState === GameState.PLAYING) {
-      setGameState(GameState.PAUSED);
-    } else if (gameState === GameState.PAUSED) {
-      setGameState(GameState.PLAYING);
-
-      if (boardRef.current) {
-        boardRef.current.focus();
-      }
-    }
-  }, [gameState]);
 
   const resetGame = useCallback(() => {
     initGame();
@@ -476,15 +462,12 @@ const GameBoard: React.FC = () => {
             setNextDirection(Direction.RIGHT);
           }
           break;
-        case " ":
-          pauseGame();
-          break;
         case "h":
           calculateHint();
           break;
       }
     },
-    [direction, gameState, pauseGame, calculateHint]
+    [direction, gameState, calculateHint]
   );
 
   const handleDirectionButton = (newDirection: Direction) => {
@@ -529,8 +512,7 @@ const GameBoard: React.FC = () => {
 
   useEffect(() => {
     initGame();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initGame]);
 
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -579,22 +561,6 @@ const GameBoard: React.FC = () => {
           </div>
 
           <div className="flex justify-between mt-4">
-            {gameState === GameState.PLAYING ? (
-              <PixelButton onClick={pauseGame}>
-                <Pause size={16} className="mr-2" />
-                Pause
-              </PixelButton>
-            ) : (
-              <PixelButton onClick={startGame}>
-                <Play size={16} className="mr-2" />
-                {gameState === GameState.READY ||
-                gameState === GameState.GAME_OVER ||
-                gameState === GameState.WIN
-                  ? "Start"
-                  : "Resume"}
-              </PixelButton>
-            )}
-
             <PixelButton
               variant="secondary"
               onClick={resetGame}
@@ -635,6 +601,8 @@ const GameBoard: React.FC = () => {
                 width: `${GRID_SIZE * CELL_SIZE}px`,
                 height: `${GRID_SIZE * CELL_SIZE}px`,
                 margin: "0 auto",
+                background: "linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%)",
+                borderRadius: "8px",
               }}
               ref={boardRef}
             >
@@ -642,8 +610,9 @@ const GameBoard: React.FC = () => {
                 className="absolute top-0 left-0 w-full h-full"
                 style={{
                   backgroundImage:
-                    "linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)",
+                    "linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)",
                   backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                  boxShadow: "inset 0 0 30px rgba(0, 0, 0, 0.5)",
                 }}
               />
 
@@ -696,6 +665,58 @@ const GameBoard: React.FC = () => {
                 </div>
               )}
 
+              {snake.map((segment, index) => (
+                <div
+                  key={segment.id}
+                  className="absolute transition-all duration-100 ease-linear"
+                  style={{
+                    width: `${CELL_SIZE}px`,
+                    height: `${CELL_SIZE}px`,
+                    left: `${segment.x * CELL_SIZE}px`,
+                    top: `${segment.y * CELL_SIZE}px`,
+                    background: index === 0 
+                      ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" 
+                      : "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                    borderRadius: index === 0 ? "8px" : "6px",
+                    transform: index === 0 ? "scale(1.1)" : "scale(1)",
+                    boxShadow: index === 0 
+                      ? "0 0 15px rgba(16, 185, 129, 0.5)" 
+                      : "0 0 10px rgba(5, 150, 105, 0.3)",
+                    zIndex: snake.length - index,
+                  }}
+                />
+              ))}
+
+              {food.map((item) => (
+                <div
+                  key={item.id}
+                  className="absolute animate-pulse"
+                  style={{
+                    width: `${CELL_SIZE}px`,
+                    height: `${CELL_SIZE}px`,
+                    left: `${item.position.x * CELL_SIZE}px`,
+                    top: `${item.position.y * CELL_SIZE}px`,
+                  }}
+                />
+              ))}
+
+              {collectibles.map((item) => (
+                <div
+                  key={item.id}
+                  className="absolute animate-bounce"
+                  style={{
+                    width: `${CELL_SIZE}px`,
+                    height: `${CELL_SIZE}px`,
+                    left: `${item.position.x * CELL_SIZE}px`,
+                    top: `${item.position.y * CELL_SIZE}px`,
+                    background: "linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)",
+                    borderRadius: "50%",
+                    boxShadow: "0 0 25px rgba(251, 191, 36, 0.7)",
+                    animation: "bounce 1s infinite",
+                  }}
+                />
+              ))}
+
               <Snake segments={snake} />
               <Food food={food} collectibles={collectibles} />
 
@@ -703,41 +724,54 @@ const GameBoard: React.FC = () => {
                 <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
                   {gameState === GameState.READY && (
                     <div className="flex flex-col items-center text-center">
-                      <p className="font-pixel text-sm text-white mb-6">
-                        Use &apos;arrow keys&apos; to control the snake!
+                      <h2 className="font-pixel text-2xl text-white mb-2 animate-pulse">
+                        Snake Game
+                      </h2>
+                      <p className="font-pixel text-sm text-white/80 mb-6">
+                        Use arrow keys or touch controls to guide the snake.<br/>
+                        Press &apos;H&apos; for path optimization.
                       </p>
-                      <PixelButton onClick={startGame} size="lg">
+                      <PixelButton 
+                        onClick={startGame} 
+                        size="lg"
+                        className="transform hover:scale-110 transition-transform duration-200"
+                      >
                         Start Game
                       </PixelButton>
                     </div>
                   )}
 
-                  {gameState === GameState.PAUSED && (
-                    <div className="text-center">
-                      <h2 className="font-pixel text-xl text-white mb-4 pixel-text">
-                        Game Paused
-                      </h2>
-                      <PixelButton onClick={pauseGame} size="lg">
-                        Resume
-                      </PixelButton>
-                    </div>
-                  )}
 
                   {gameState === GameState.GAME_OVER && (
                     <div className="text-center animate-pixel-shake">
-                      <h2 className="font-pixel text-xl text-red-500 mb-4 pixel-text">
+                      <h2 className="font-pixel text-3xl text-red-500 mb-4 animate-pulse">
                         Game Over
                       </h2>
-                      <p className="font-pixel text-sm text-white mb-2">
-                        Score: {stats.score}
-                      </p>
-                      {stats.score === stats.highScore && stats.score > 0 && (
-                        <p className="font-pixel text-sm text-yellow-500 mb-6">
-                          New High Score!
+                      <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
+                        <p className="font-pixel text-lg text-white mb-2">
+                          Final Score: {stats.score}
                         </p>
-                      )}
+                        {stats.score === stats.highScore && stats.score > 0 && (
+                          <p className="font-pixel text-lg text-yellow-500 animate-bounce">
+                            🏆 New High Score! 🏆
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div>
+                            <p className="text-gray-400 text-sm">Food Eaten</p>
+                            <p className="text-xl font-bold text-white">{stats.foodEaten}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-sm">Coins</p>
+                            <p className="text-xl font-bold text-yellow-400">{stats.coinsCollected}</p>
+                          </div>
+                        </div>
+                      </div>
                       <div className="flex gap-4 justify-center">
-                        <PixelButton onClick={startGame}>
+                        <PixelButton 
+                          onClick={startGame}
+                          className="transform hover:scale-110 transition-transform duration-200"
+                        >
                           Play Again
                         </PixelButton>
                       </div>
@@ -746,19 +780,34 @@ const GameBoard: React.FC = () => {
 
                   {gameState === GameState.WIN && (
                     <div className="text-center">
-                      <h2 className="font-pixel text-xl text-green-500 mb-4 pixel-text">
-                        You Won!
+                      <h2 className="font-pixel text-3xl text-green-500 mb-4 animate-pulse">
+                        Victory! 🎉
                       </h2>
-                      <p className="font-pixel text-sm text-white mb-2">
-                        Score: {stats.score}
-                      </p>
-                      {stats.score === stats.highScore && (
-                        <p className="font-pixel text-sm text-yellow-500 mb-6">
-                          New High Score!
+                      <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
+                        <p className="font-pixel text-lg text-white mb-2">
+                          Final Score: {stats.score}
                         </p>
-                      )}
+                        {stats.score === stats.highScore && (
+                          <p className="font-pixel text-lg text-yellow-500 animate-bounce">
+                            🏆 New High Score! 🏆
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div>
+                            <p className="text-gray-400 text-sm">Food Eaten</p>
+                            <p className="text-xl font-bold text-white">{stats.foodEaten}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-sm">Coins</p>
+                            <p className="text-xl font-bold text-yellow-400">{stats.coinsCollected}</p>
+                          </div>
+                        </div>
+                      </div>
                       <div className="flex gap-4 justify-center">
-                        <PixelButton onClick={startGame}>
+                        <PixelButton 
+                          onClick={startGame}
+                          className="transform hover:scale-110 transition-transform duration-200"
+                        >
                           Play Again
                         </PixelButton>
                       </div>
@@ -777,60 +826,49 @@ const GameBoard: React.FC = () => {
                 (food.length === 0 && collectibles.length === 0 && !hintActiveRef.current)
               }
               variant={hintActiveRef.current ? "primary" : "secondary"}
-              className="w-full"
+              className="w-full transform hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-xl"
             >
               <Lightbulb size={16} className="mr-2" />
               {hintActiveRef.current ? "Disable Path Optimization" : "Optimize Path (TSP)"}
             </PixelButton>
           </div>
 
-          <div className="md:hidden mt-4">
-            <div className="flex flex-col items-center gap-2">
+          <div className="md:hidden mt-6">
+            <div className="flex flex-col items-center gap-3">
               <PixelButton
                 onClick={() => handleDirectionButton(Direction.UP)}
-                className="w-12 h-12 flex items-center justify-center p-0"
+                className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
                 disabled={gameState !== GameState.PLAYING}
               >
-                <ChevronUp size={20} />
+                <ChevronUp size={24} />
               </PixelButton>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <PixelButton
                   onClick={() => handleDirectionButton(Direction.LEFT)}
-                  className="w-12 h-12 flex items-center justify-center p-0"
+                  className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
                   disabled={gameState !== GameState.PLAYING}
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={24} />
                 </PixelButton>
 
                 <PixelButton
                   onClick={() => handleDirectionButton(Direction.DOWN)}
-                  className="w-12 h-12 flex items-center justify-center p-0"
+                  className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
                   disabled={gameState !== GameState.PLAYING}
                 >
-                  <ChevronDown size={20} />
+                  <ChevronDown size={24} />
                 </PixelButton>
 
                 <PixelButton
                   onClick={() => handleDirectionButton(Direction.RIGHT)}
-                  className="w-12 h-12 flex items-center justify-center p-0"
+                  className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
                   disabled={gameState !== GameState.PLAYING}
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={24} />
                 </PixelButton>
               </div>
             </div>
-          </div>
-
-          <div className="mt-4 text-center">
-            <p className="font-pixel text-xs text-muted-foreground">
-              Use arrow keys to control the snake. Press &apos;H&apos; for
-              hints.
-            </p>
-            <p className="font-pixel text-[10px] text-muted-foreground/50 mt-1">
-              Collect items and sell them for coins or to upgrade your
-              inventory!
-            </p>
           </div>
         </div>
       </div>
