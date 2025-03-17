@@ -104,6 +104,7 @@ const GameBoard: React.FC = () => {
     setFoodEatenSinceLastCollectible(0);
     setGameState(GameState.READY);
     setHint([]);
+    hintActiveRef.current = false;
     setStats((prev) => ({
       ...prev,
       score: 0,
@@ -116,8 +117,6 @@ const GameBoard: React.FC = () => {
       inventoryCurrentWeight: prev.inventoryCurrentWeight,
       level: 1,
     }));
-
-    hintActiveRef.current = false;
   }, []);
 
   const startGame = useCallback(() => {
@@ -262,7 +261,8 @@ const GameBoard: React.FC = () => {
     (head: Position) => {
       if (
         (food.length === 0 && collectibles.length === 0) ||
-        gameState !== GameState.PLAYING
+        gameState !== GameState.PLAYING ||
+        !hintActiveRef.current
       )
         return;
 
@@ -351,8 +351,11 @@ const GameBoard: React.FC = () => {
         setFood(newFood);
       }
 
-      setHint([]);
-      hintActiveRef.current = false;
+      // Don't reset the hint path or hintActiveRef if the hint is active
+      // Only update the path if hint is active
+      if (hintActiveRef.current && (newFood.length > 0 || collectibles.length > 0)) {
+        updateHintPath(newSnake[0]);
+      }
 
       checkWinCondition();
     }
@@ -388,12 +391,16 @@ const GameBoard: React.FC = () => {
         setFood(additionalFood);
       }
 
-      setHint([]);
-      hintActiveRef.current = false;
+      // Don't reset the hint path or hintActiveRef if the hint is active
+      // Only update the path if hint is active
+      if (hintActiveRef.current && (food.length > 0 || newCollectibles.length > 0)) {
+        updateHintPath(newSnake[0]);
+      }
 
       checkWinCondition();
     }
 
+    // Always update hint path if hint is active and there are targets
     if (hintActiveRef.current && (food.length > 0 || collectibles.length > 0)) {
       updateHintPath(newSnake[0]);
     }
@@ -409,28 +416,37 @@ const GameBoard: React.FC = () => {
     gameOver,
     checkWinCondition,
     updateHintPath,
+
   ]);
 
   const calculateHint = useCallback(() => {
-    if (
-      (food.length === 0 && collectibles.length === 0) ||
-      gameState !== GameState.PLAYING
-    )
-      return;
-
-    const head = snake[0];
-
-    const allPositions = [
-      ...food.map((f) => f.position),
-      ...collectibles.map((c) => c.position),
-    ];
-
-    const route = tspNearestNeighbor(head, allPositions);
-
-    setHint(route);
-    hintActiveRef.current = true;
-
-    toast("Hint: Optimal path calculated!");
+    if (gameState !== GameState.PLAYING) return;
+    
+    // Toggle hint on/off
+    if (hintActiveRef.current) {
+      // Turn off hint
+      hintActiveRef.current = false;
+      setHint([]);
+      toast("Path optimization disabled");
+    } else {
+      // Turn on hint
+      if (food.length === 0 && collectibles.length === 0) {
+        toast.error("No targets available for path optimization");
+        return;
+      }
+      
+      const head = snake[0];
+      const allPositions = [
+        ...food.map((f) => f.position),
+        ...collectibles.map((c) => c.position),
+      ];
+      
+      const route = tspNearestNeighbor(head, allPositions);
+      
+      setHint(route);
+      hintActiveRef.current = true;
+      toast("Path optimization enabled!");
+    }
   }, [food, collectibles, snake, gameState]);
 
   const handleKeyDown = useCallback(
@@ -758,13 +774,13 @@ const GameBoard: React.FC = () => {
               onClick={calculateHint}
               disabled={
                 gameState !== GameState.PLAYING ||
-                (food.length === 0 && collectibles.length === 0)
+                (food.length === 0 && collectibles.length === 0 && !hintActiveRef.current)
               }
-              variant="secondary"
+              variant={hintActiveRef.current ? "primary" : "secondary"}
               className="w-full"
             >
               <Lightbulb size={16} className="mr-2" />
-              Optimize Path (TSP)
+              {hintActiveRef.current ? "Disable Path Optimization" : "Optimize Path (TSP)"}
             </PixelButton>
           </div>
 
