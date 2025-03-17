@@ -71,14 +71,6 @@ const Food: React.FC<FoodProps> = ({ food, collectibles }) => {
         >
           <div className="relative">
             {getCollectibleIcon(item.type)}
-            <Sparkles 
-              className="absolute -top-2 -right-2 text-yellow-400 animate-pulse" 
-              size={12} 
-            />
-          </div>
-          {/* Modified glow indicator position to avoid overlapping with route numbers */}
-          <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full w-3 h-3 flex items-center justify-center animate-pulse-glow">
-            <Coins size={2} className="text-white" />
           </div>
         </div>
       ))}

@@ -47,7 +47,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
-  HeartPulse,
   Trophy,
   Lightbulb,
   Coins,
@@ -93,11 +92,7 @@ const GameBoard: React.FC = () => {
     setFood(initialFood);
 
     // Add initial collectible
-    const initialCollectible = generateCollectible(
-      initialSnake,
-      initialFood,
-      []
-    );
+    const initialCollectible = generateCollectible(initialSnake, initialFood, []);
     setCollectibles([initialCollectible]);
     setFoodEatenSinceLastCollectible(0);
     setGameState(GameState.READY);
@@ -169,7 +164,7 @@ const GameBoard: React.FC = () => {
         setStats((prev) => ({
           ...prev,
           coinsCollected: prev.coinsCollected + item.sellValue!,
-          inventoryCurrentWeight: prev.inventoryCurrentWeight - item.weight,
+          inventoryCurrentWeight: Math.max(0, prev.inventoryCurrentWeight - item.weight),
         }));
         toast.success(`Sold for ${item.sellValue} coins!`);
       }
@@ -546,16 +541,6 @@ const GameBoard: React.FC = () => {
               </div>
               <span className="font-pixel text-lg text-white mt-1">
                 {stats.coinsCollected}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <HeartPulse className="text-red-500" size={16} />
-                <span className="font-pixel text-xs text-white">Length</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {snake.length - 3}
               </span>
             </div>
           </div>
