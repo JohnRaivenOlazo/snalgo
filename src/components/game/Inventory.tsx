@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { InventoryProps, InventoryItem, CollectibleType } from "@/components/game/utils/types";
+import {
+  InventoryProps,
+  InventoryItem,
+  CollectibleType,
+} from "@/components/game/utils/types";
 import PixelatedContainer from "../ui/PixelatedContainer";
-import PixelButton from '../ui/PixelButton';
-import { ArrowUpDown, Search, ChevronDown, Coins, Diamond, Star, Zap, Package } from "lucide-react";
-import { bubbleSort, linearSearch, SearchStep, SortStep } from "@/components/game/utils/algorithms";
-import { useGameStore } from '@/stores/useGameStore';
+import PixelButton from "../ui/PixelButton";
+import {
+  ArrowUpDown,
+  Search,
+  ChevronDown,
+  Coins,
+  Diamond,
+  Star,
+  Zap,
+  Package,
+} from "lucide-react";
+import {
+  bubbleSort,
+  linearSearch,
+  SearchStep,
+  SortStep,
+} from "@/components/game/utils/algorithms";
+import { useGameStore } from "@/stores/useGameStore";
 
 const Inventory: React.FC<InventoryProps> = ({
   items,
@@ -12,13 +30,15 @@ const Inventory: React.FC<InventoryProps> = ({
   onDeleteItem,
 }) => {
   const { capacity } = useGameStore();
-  
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [sortSteps, setSortSteps] = useState<SortStep<InventoryItem>[]>([]);
   const [currentSortStep, setCurrentSortStep] = useState<number>(-1);
-  const [searchSteps, setSearchSteps] = useState<SearchStep<InventoryItem>[]>([]);
+  const [searchSteps, setSearchSteps] = useState<SearchStep<InventoryItem>[]>(
+    []
+  );
   const [currentSearchStep, setCurrentSearchStep] = useState<number>(-1);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortedItems, setSortedItems] = useState<InventoryItem[]>(items);
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>(items);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -44,34 +64,34 @@ const Inventory: React.FC<InventoryProps> = ({
     }
   };
 
-  const handleSort = (sortBy: 'value' | 'weight' | 'type' | 'timestamp') => {
+  const handleSort = (sortBy: "value" | "weight" | "type" | "timestamp") => {
     if (sortBy === sortBy) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
     setSearchSteps([]);
     setCurrentSearchStep(-1);
-    setSearchTerm('');
+    setSearchTerm("");
     setIsSearching(false);
     setFilteredItems(sortedItems);
-    
+
     const compareFn = (a: InventoryItem, b: InventoryItem) => {
-      if (sortOrder === 'asc') {
+      if (sortOrder === "asc") {
         return a[sortBy] > b[sortBy] ? 1 : -1;
       } else {
         return a[sortBy] < b[sortBy] ? 1 : -1;
       }
     };
-    
+
     if (items.length <= 1) {
       return;
     }
-    
+
     const steps = bubbleSort<InventoryItem>(items, compareFn);
     setSortSteps(steps);
     setCurrentSortStep(0);
-    
+
     let step = 0;
     const interval = setInterval(() => {
       if (step < steps.length) {
@@ -93,21 +113,22 @@ const Inventory: React.FC<InventoryProps> = ({
       setFilteredItems(sortedItems);
       return;
     }
-    
+
     setSortSteps([]);
     setCurrentSearchStep(-1);
     setIsSearching(true);
-    
-    const predicate = (item: InventoryItem) => item.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const predicate = (item: InventoryItem) =>
+      item.type.toLowerCase().includes(searchTerm.toLowerCase());
     const steps = linearSearch<InventoryItem>(sortedItems, predicate);
     setSearchSteps(steps);
-    
+
     if (steps.length === 0) {
       return;
     }
-    
+
     setCurrentSearchStep(0);
-    
+
     let step = 0;
     const interval = setInterval(() => {
       if (step < steps.length) {
@@ -117,7 +138,7 @@ const Inventory: React.FC<InventoryProps> = ({
         clearInterval(interval);
         const matchedItems = sortedItems.filter(predicate);
         setFilteredItems(matchedItems);
-        
+
         setTimeout(() => {
           setCurrentSearchStep(-1);
           setIsSearching(false);
@@ -126,22 +147,15 @@ const Inventory: React.FC<InventoryProps> = ({
     }, 300);
   };
 
-  const handleClearSearch = () => {
-    setSearchTerm('');
-    setSearchSteps([]);
-    setCurrentSearchStep(-1);
-    setIsSearching(false);
-    setFilteredItems(sortedItems);
-  };
-
-  const displayItems = currentSortStep >= 0 && sortSteps.length > 0
-    ? sortSteps[currentSortStep].array 
-    : currentSearchStep >= 0 && searchSteps.length > 0 
-      ? searchSteps[currentSearchStep].array 
+  const displayItems =
+    currentSortStep >= 0 && sortSteps.length > 0
+      ? sortSteps[currentSortStep].array
+      : currentSearchStep >= 0 && searchSteps.length > 0
+      ? searchSteps[currentSearchStep].array
       : filteredItems;
 
   return (
-    <PixelatedContainer 
+    <PixelatedContainer
       className="w-full h-full flex flex-col gap-4 mt-4 md:mt-0 relative overflow-hidden"
       glowEffect={true}
       variant="elevated"
@@ -149,7 +163,9 @@ const Inventory: React.FC<InventoryProps> = ({
       <div className="flex items-center justify-between border-b border-game-border pb-2">
         <div className="flex items-center gap-2">
           <Package size={14} className="text-primary animate-pulse" />
-          <h3 className="font-pixel text-xs md:text-sm text-white">Inventory</h3>
+          <h3 className="font-pixel text-xs md:text-sm text-white">
+            Inventory
+          </h3>
         </div>
         <div className="mt-4 flex items-center gap-2">
           <span className="text-[10px] font-pixel text-white">Capacity</span>
@@ -160,93 +176,87 @@ const Inventory: React.FC<InventoryProps> = ({
           </div>
         </div>
       </div>
-      
+
       <div className="flex flex-wrap gap-2 mt-2">
-        <div className="relative">
-          <PixelButton 
-            variant="secondary" 
-            size="sm" 
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-1 hover:animate-pulse"
-          >
-            <ArrowUpDown size={12} />
-            <span className="text-[10px]">Sort</span>
-            <ChevronDown size={12} />
-          </PixelButton>
-          {isDropdownOpen && (
-            <div className="absolute mt-1 w-32 bg-background border border-game-border z-10 animate-fade-in">
-              <div 
-                className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
-                onClick={() => handleSort('value')}
-              >
-                Sort by Value
-              </div>
-              <div 
-                className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
-                onClick={() => handleSort('weight')}
-              >
-                Sort by Weight
-              </div>
-              <div 
-                className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
-                onClick={() => handleSort('type')}
-              >
-                Sort by Type
-              </div>
-            </div>
-          )}
-        </div>
-        
         <div className="flex items-center gap-2">
-          <input 
-            type="text" 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
-            placeholder="Search..." 
-            className="text-[10px] font-pixel p-1 border border-game-border bg-background text-white focus:border-primary focus:outline-hidden transition-colors"
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search..."
+            className="text-[10px] w-full font-pixel p-1 border border-game-border bg-background text-white focus:border-primary focus:outline-hidden transition-colors"
           />
-          <PixelButton 
-            variant="primary" 
+          <PixelButton
+            variant="primary"
             size="sm"
             onClick={handleSearch}
             className="flex items-center gap-1 hover:animate-pulse"
           >
             <Search size={12} />
           </PixelButton>
-          {searchTerm && (
-            <PixelButton 
-              variant="secondary" 
+          <div className="relative">
+            <PixelButton
+              variant="secondary"
               size="sm"
-              onClick={handleClearSearch}
-              className="flex items-center hover:animate-pulse"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-1 hover:animate-pulse"
             >
-              <span className="text-[10px]">Clear</span>
+              <ArrowUpDown size={12} />
+              <span className="text-[10px]">Sort</span>
+              <ChevronDown size={12} />
             </PixelButton>
-          )}
+            {isDropdownOpen && (
+              <div className="absolute mt-1 w-full bg-background border border-game-border z-10 animate-fade-in">
+                <div
+                  className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => handleSort("value")}
+                >
+                  Value
+                </div>
+                <div
+                  className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => handleSort("weight")}
+                >
+                  Weight
+                </div>
+                <div
+                  className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => handleSort("type")}
+                >
+                  Type
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto mt-2 relative">
         {displayItems.length === 0 ? (
           <div className="text-center text-muted-foreground text-xs font-pixel py-4">
-            {isSearching ? "Searching..." : searchTerm ? "No matching collectibles found" : "No collectibles found"}
+            {isSearching
+              ? "Searching..."
+              : searchTerm
+              ? "No matching collectibles found"
+              : "No collectibles found"}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2">
             {displayItems.map((item, index) => {
-              const isHighlighted = 
-                (currentSortStep !== -1 && sortSteps.length > 0 && 
-                 (index === sortSteps[currentSortStep].comparedIndices[0] || 
-                  index === sortSteps[currentSortStep].comparedIndices[1]));
-              
-              const isCurrentlySearched = 
-                currentSearchStep !== -1 && 
-                searchSteps.length > 0 && 
+              const isHighlighted =
+                currentSortStep !== -1 &&
+                sortSteps.length > 0 &&
+                (index === sortSteps[currentSortStep].comparedIndices[0] ||
+                  index === sortSteps[currentSortStep].comparedIndices[1]);
+
+              const isCurrentlySearched =
+                currentSearchStep !== -1 &&
+                searchSteps.length > 0 &&
                 index === searchSteps[currentSearchStep].currentIndex;
-                
-              const isFound = 
-                currentSearchStep !== -1 && 
-                searchSteps.length > 0 && 
+
+              const isFound =
+                currentSearchStep !== -1 &&
+                searchSteps.length > 0 &&
                 searchSteps[currentSearchStep].foundIndices.includes(index);
 
               return (
@@ -254,9 +264,21 @@ const Inventory: React.FC<InventoryProps> = ({
                   key={item.id}
                   className={`
                     flex items-center justify-between p-2 text-xs
-                    ${isHighlighted || isCurrentlySearched ? 'bg-muted' : 'bg-background'}
-                    ${isFound ? 'border-2 border-green-500 neon-border' : 'border border-game-border'}
-                    ${isHighlighted || isCurrentlySearched ? 'animate-pulse' : ''}
+                    ${
+                      isHighlighted || isCurrentlySearched
+                        ? "bg-muted"
+                        : "bg-background"
+                    }
+                    ${
+                      isFound
+                        ? "border-2 border-green-500 neon-border"
+                        : "border border-game-border"
+                    }
+                    ${
+                      isHighlighted || isCurrentlySearched
+                        ? "animate-pulse"
+                        : ""
+                    }
                     transition-all duration-300 hover:bg-muted/50 group
                   `}
                 >
@@ -265,27 +287,35 @@ const Inventory: React.FC<InventoryProps> = ({
                       {getCollectibleIcon(item.type as CollectibleType)}
                       <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-white rounded-full opacity-0 group-hover:opacity-50 transition-opacity"></div>
                     </div>
-                    <span className="font-pixel text-[10px] group-hover:text-primary transition-colors">{item.type}</span>
+                    <span className="font-pixel text-[10px] group-hover:text-primary transition-colors">
+                      {item.type}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-muted-foreground">Val:</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Val:
+                      </span>
                       <span className="text-[10px]">{item.value}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-muted-foreground">Wt:</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Wt:
+                      </span>
                       <span className="text-[10px]">{item.weight}</span>
                     </div>
                     {onDeleteItem && (
-                      <PixelButton 
-                        variant="secondary" 
+                      <PixelButton
+                        variant="secondary"
                         size="sm"
                         onClick={() => onDeleteItem(item.id)}
                         className="p-1 ml-1 flex items-center group-hover:animate-pulse"
                         title="Sell for coins"
                       >
                         <Coins size={10} className="text-yellow-500" />
-                        <span className="text-[8px] ml-1">{item.sellValue}</span>
+                        <span className="text-[8px] ml-1">
+                          {item.sellValue}
+                        </span>
                       </PixelButton>
                     )}
                   </div>
@@ -294,7 +324,7 @@ const Inventory: React.FC<InventoryProps> = ({
             })}
           </div>
         )}
-        
+
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-1/4 left-3/4 opacity-20 animate-float">
             <Diamond size={8} className="text-blue-400" />
@@ -304,7 +334,7 @@ const Inventory: React.FC<InventoryProps> = ({
           </div>
         </div>
       </div>
-      
+
       <div className="w-full h-2 bg-muted mt-2 relative overflow-hidden rounded-full">
         <div
           className="h-full bg-linear-to-r from-primary/70 to-primary transition-all duration-300"
