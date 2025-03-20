@@ -12,7 +12,7 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set) => ({
   coins: 0,
-  capacity: MAX_STOMACH_CAPACITY,
+  capacity: 15,
   upgradeCapacity: () => set((state) => ({
     capacity: state.capacity + 10,
     coins: state.coins - 10

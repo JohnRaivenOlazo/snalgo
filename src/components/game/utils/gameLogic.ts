@@ -46,10 +46,38 @@ export const FOOD_PROPERTIES = {
 
 // Collectible properties - adjusted for beginners
 export const COLLECTIBLE_PROPERTIES = {
-  [CollectibleType.COIN]: { minValue: 5, maxValue: 10, minWeight: 2, maxWeight: 5, minSellValue: 5, maxSellValue: 10 },
-  [CollectibleType.GEM]: { minValue: 10, maxValue: 15, minWeight: 5, maxWeight: 10, minSellValue: 10, maxSellValue: 15 },
-  [CollectibleType.POTION]: { minValue: 15, maxValue: 20, minWeight: 8, maxWeight: 15, minSellValue: 15, maxSellValue: 20 },
-  [CollectibleType.ARTIFACT]: { minValue: 20, maxValue: 30, minWeight: 12, maxWeight: 20, minSellValue: 20, maxSellValue: 30 },
+  [CollectibleType.COIN]: { 
+    minValue: 2, 
+    maxValue: 5, 
+    minWeight: 1, 
+    maxWeight: 3, 
+    minSellValue: 1, 
+    maxSellValue: 3 
+  },
+  [CollectibleType.GEM]: { 
+    minValue: 5, 
+    maxValue: 10, 
+    minWeight: 3, 
+    maxWeight: 5, 
+    minSellValue: 3, 
+    maxSellValue: 5 
+  },
+  [CollectibleType.POTION]: { 
+    minValue: 8, 
+    maxValue: 12, 
+    minWeight: 5, 
+    maxWeight: 7, 
+    minSellValue: 5, 
+    maxSellValue: 8 
+  },
+  [CollectibleType.ARTIFACT]: { 
+    minValue: 12, 
+    maxValue: 15, 
+    minWeight: 8, 
+    maxWeight: 10, 
+    minSellValue: 8, 
+    maxSellValue: 12 
+  },
 };
 
 // Helper to create initial snake

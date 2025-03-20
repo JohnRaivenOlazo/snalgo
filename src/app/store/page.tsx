@@ -18,11 +18,11 @@ const StorePage = () => {
   const upgrades = [
     {
       name: 'Upgrade Capacity',
-      description: 'Increase inventory capacity by 10',
-      price: 10,
+      description: 'Increase inventory capacity by 5',
+      price: 15,
       icon: Package,
       color: 'text-yellow-400',
-      action: upgradeCapacity
+      action: () => upgradeCapacity
     }
   ];
 
