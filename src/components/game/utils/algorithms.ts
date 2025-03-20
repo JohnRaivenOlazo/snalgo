@@ -1,9 +1,6 @@
 import { FoodItem, Position } from "@/components/game/utils/types";
 import { MAX_STOMACH_CAPACITY } from "./gameLogic";
 
-// Update MAX_STOMACH_CAPACITY
-export const MAX_STOMACH_CAPACITY = 20; // Increased from 10
-
 // Knapsack algorithm
 export const knapsackAlgorithm = (
   items: FoodItem[],
