@@ -162,16 +162,22 @@ const GameBoard: React.FC = () => {
       const item = prevInventory.find((i) => i.id === itemId);
       if (!item) return prevInventory;
 
-      if (item.sellValue) {
-        addCoins(item.sellValue);
-        setStats(prev => ({
-          ...prev,
-          inventoryCurrentWeight: Math.max(0, prev.inventoryCurrentWeight - item.weight)
-        }));
-        toast.success(`Sold for ${item.sellValue} coins!`);
-      }
+      // Split state updates from side effects
+      const newInventory = prevInventory.filter((i) => i.id !== itemId);
+      
+      // Queue the side effects to run after state update
+      setTimeout(() => {
+        if (item.sellValue) {
+          addCoins(item.sellValue);
+          setStats(prev => ({
+            ...prev,
+            inventoryCurrentWeight: Math.max(0, prev.inventoryCurrentWeight - item.weight)
+          }));
+          toast.success(`Sold for ${item.sellValue} coins!`);
+        }
+      }, 0);
 
-      return prevInventory.filter((i) => i.id !== itemId);
+      return newInventory;
     });
   }, [addCoins]);
 
