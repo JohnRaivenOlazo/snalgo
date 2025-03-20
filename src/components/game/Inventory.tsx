@@ -4,14 +4,14 @@ import PixelatedContainer from "../ui/PixelatedContainer";
 import PixelButton from '../ui/PixelButton';
 import { ArrowUpDown, Search, ChevronDown, Coins, Diamond, Star, Zap, Package } from "lucide-react";
 import { bubbleSort, linearSearch, SearchStep, SortStep } from "@/components/game/utils/algorithms";
+import { useGameStore } from '@/stores/useGameStore';
 
 const Inventory: React.FC<InventoryProps> = ({
   items,
-  capacity,
   currentWeight,
   onDeleteItem,
-  onCapacityChange
 }) => {
+  const { capacity } = useGameStore();
   
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [sortSteps, setSortSteps] = useState<SortStep<InventoryItem>[]>([]);
@@ -134,13 +134,6 @@ const Inventory: React.FC<InventoryProps> = ({
     setFilteredItems(sortedItems);
   };
 
-  const handleCapacityUpgrade = () => {
-    if (onCapacityChange) {
-      const newCapacity = capacity + 10;
-      onCapacityChange(newCapacity);
-    }
-  };
-
   const displayItems = currentSortStep >= 0 && sortSteps.length > 0
     ? sortSteps[currentSortStep].array 
     : currentSearchStep >= 0 && searchSteps.length > 0 
@@ -158,28 +151,15 @@ const Inventory: React.FC<InventoryProps> = ({
           <Package size={14} className="text-primary animate-pulse" />
           <h3 className="font-pixel text-xs md:text-sm text-white">Inventory</h3>
         </div>
-        <div className="text-xs font-pixel text-white relative">
-          <span className="animate-pulse-glow px-1.5 py-0.5 rounded">
-            {currentWeight}/{capacity}
-          </span>
+        <div className="mt-4 flex items-center gap-2">
+          <span className="text-[10px] font-pixel text-white">Capacity</span>
+          <div className="text-xs font-pixel text-white relative">
+            <span className="animate-pulse-glow px-1.5 py-0.5 rounded">
+              {currentWeight}/{capacity}
+            </span>
+          </div>
         </div>
       </div>
-      
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-[10px] font-pixel text-white">Upgrade Capacity</span>
-          <PixelButton 
-            variant="secondary" 
-            size="sm"
-            onClick={handleCapacityUpgrade}
-            className="px-2 py-1 flex rounded-full bg-green-500 items-center gap-1 hover:bg-green-500/80 hover:animate-pulse"
-          >
-            <span className="text-[10px]">+10</span>
-            <span className="text-[10px] text-white">for</span>
-            <Coins size={10} className="ml-1 text-yellow-500" />
-            <span className="text-[10px]">10</span>
-          </PixelButton>
-        </div>
-
       
       <div className="flex flex-wrap gap-2 mt-2">
         <div className="relative">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Direction,
   FoodItem,
@@ -9,7 +9,6 @@ import {
   GameStats,
   Collectible,
   CollectibleType,
-  FoodType,
 } from "@/components/game/utils/types";
 import Snake from "./Snake";
 import Food from "./Food";
@@ -31,17 +30,14 @@ import {
   generateCollectible,
   collectibleToInventoryItem,
   getOppositeDirection,
-  MAX_STOMACH_CAPACITY,
   MAX_FOOD_ITEMS,
   MAX_COLLECTIBLES,
   COLLECTIBLE_THRESHOLD,
 } from "@/components/game/utils/gameLogic";
 import {
-  knapsackAlgorithm,
   tspNearestNeighbor,
 } from "@/components/game/utils/algorithms";
 import {
-  RotateCcw,
   ChevronUp,
   ChevronDown,
   ChevronLeft,
@@ -51,13 +47,11 @@ import {
   Lightbulb,
   Coins,
 } from "lucide-react";
+import { useGameStore } from '@/stores/useGameStore';
 
 const GameBoard: React.FC = () => {
   const [snake, setSnake] = useState<SnakeSegment[]>([]);
   const [direction, setDirection] = useState<Direction>(Direction.RIGHT);
-  const [nextDirection, setNextDirection] = useState<Direction>(
-    Direction.RIGHT
-  );
   const [food, setFood] = useState<FoodItem[]>([]);
   const [collectibles, setCollectibles] = useState<Collectible[]>([]);
   const [foodEatenSinceLastCollectible, setFoodEatenSinceLastCollectible] =
@@ -70,7 +64,7 @@ const GameBoard: React.FC = () => {
     highScore: 0,
     foodEaten: 0,
     coinsCollected: 0,
-    inventoryCapacity: MAX_STOMACH_CAPACITY,
+    inventoryCapacity: 0,
     inventoryCurrentWeight: 0,
     level: 1,
   });
@@ -78,12 +72,24 @@ const GameBoard: React.FC = () => {
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const hintActiveRef = useRef<boolean>(false);
+  const directionQueue = useRef<Direction[]>([]);
+  const directionRef = useRef(direction);
+
+  const { addCoins, coins } = useGameStore();
+
+  const currentWeightRef = useRef(stats.inventoryCurrentWeight);
+  useEffect(() => {
+    currentWeightRef.current = stats.inventoryCurrentWeight;
+  }, [stats.inventoryCurrentWeight]);
+
+  useEffect(() => {
+    directionRef.current = direction;
+  }, [direction]);
 
   const initGame = useCallback(() => {
     const initialSnake = createInitialSnake();
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
-    setNextDirection(Direction.RIGHT);
 
     const initialFood: FoodItem[] = [];
     for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
@@ -91,7 +97,6 @@ const GameBoard: React.FC = () => {
     }
     setFood(initialFood);
 
-    // Add initial collectible
     const initialCollectible = generateCollectible(
       initialSnake,
       initialFood,
@@ -109,8 +114,6 @@ const GameBoard: React.FC = () => {
         ? parseInt(localStorage.getItem("snakeHighScore") || "0")
         : 0,
       foodEaten: 0,
-      coinsCollected: prev.coinsCollected,
-      inventoryCapacity: prev.inventoryCapacity,
       inventoryCurrentWeight: prev.inventoryCurrentWeight,
       level: 1,
     }));
@@ -131,10 +134,6 @@ const GameBoard: React.FC = () => {
       boardRef.current.focus();
     }
   }, [gameState, initGame]);
-
-  const resetGame = useCallback(() => {
-    initGame();
-  }, [initGame]);
 
   const gameOver = useCallback(() => {
     setGameState(GameState.GAME_OVER);
@@ -160,90 +159,22 @@ const GameBoard: React.FC = () => {
   }, [stats.score, stats.highScore]);
 
   const handleDeleteInventoryItem = useCallback((itemId: string) => {
-    setInventory((prevInventory) => {
+    setInventory(prevInventory => {
       const item = prevInventory.find((i) => i.id === itemId);
       if (!item) return prevInventory;
 
       if (item.sellValue) {
-        setStats((prev) => ({
+        addCoins(item.sellValue);
+        setStats(prev => ({
           ...prev,
-          coinsCollected: prev.coinsCollected + item.sellValue!,
-          inventoryCurrentWeight: Math.max(
-            0,
-            prev.inventoryCurrentWeight - item.weight
-          ),
+          inventoryCurrentWeight: Math.max(0, prev.inventoryCurrentWeight - item.weight)
         }));
         toast.success(`Sold for ${item.sellValue} coins!`);
       }
 
       return prevInventory.filter((i) => i.id !== itemId);
     });
-  }, []);
-
-  const handleCapacityChange = useCallback(
-    (newCapacity: number) => {
-      const costPerUpgrade = 10;
-      const capacityChange = newCapacity - stats.inventoryCapacity;
-
-      if (capacityChange > 0) {
-        const upgradeCost = costPerUpgrade * (capacityChange / 10);
-
-        if (stats.coinsCollected >= upgradeCost) {
-          setStats((prev) => ({
-            ...prev,
-            inventoryCapacity: newCapacity,
-            coinsCollected: prev.coinsCollected - upgradeCost,
-          }));
-          toast.success(`Inventory upgraded! Cost: ${upgradeCost} coins`);
-        } else {
-          toast.error(`Not enough coins! Need ${upgradeCost} coins`);
-          return;
-        }
-      }
-
-      if (stats.inventoryCurrentWeight > newCapacity && inventory.length > 0) {
-        const inventoryCollectibles = inventory.filter((item) =>
-          Object.values(CollectibleType).includes(item.type as CollectibleType)
-        );
-
-        const collectibleItems: FoodItem[] = inventoryCollectibles.map(
-          (item) => ({
-            id: item.id,
-            position: { x: 0, y: 0 },
-            type: "APPLE" as FoodType,
-            value: item.value,
-            weight: item.weight,
-            color: "",
-          })
-        );
-
-        const keepItems = knapsackAlgorithm(collectibleItems, 0, newCapacity);
-
-        const updatedInventory = inventory.filter((item) =>
-          keepItems.some((keepItem) => keepItem.id === item.id)
-        );
-
-        const totalWeight = updatedInventory.reduce(
-          (sum, item) => sum + item.weight,
-          0
-        );
-
-        toast.info("Capacity changed! Optimizing inventory...");
-
-        setInventory(updatedInventory);
-        setStats((prev) => ({
-          ...prev,
-          inventoryCurrentWeight: totalWeight,
-        }));
-      }
-    },
-    [
-      inventory,
-      stats.inventoryCurrentWeight,
-      stats.inventoryCapacity,
-      stats.coinsCollected,
-    ]
-  );
+  }, [addCoins]);
 
   const updateHintPath = useCallback(
     (head: Position) => {
@@ -269,15 +200,31 @@ const GameBoard: React.FC = () => {
   const updateGameState = useCallback(() => {
     if (gameState !== GameState.PLAYING) return;
 
-    setDirection(nextDirection);
+    // Process direction queue
+    let newDirection = directionRef.current;
+    while (directionQueue.current.length > 0) {
+      const nextDir = directionQueue.current.shift()!;
+      const oppositeDirection = getOppositeDirection(newDirection);
+      
+      if (nextDir !== oppositeDirection) {
+        newDirection = nextDir;
+        break; // Only process one valid direction per frame
+      }
+    }
+
+    if (newDirection !== directionRef.current) {
+      setDirection(newDirection);
+      directionRef.current = newDirection; // Update the ref immediately
+    }
+
     const head = snake[0];
 
     const newHead: SnakeSegment = {
-      ...getNewHeadPosition(head, nextDirection),
+      ...getNewHeadPosition(head, newDirection),
       id: crypto.randomUUID(),
     };
 
-    if (willHitWall(head, nextDirection) || willHitSelf(newHead, snake)) {
+    if (willHitWall(head, newDirection) || willHitSelf(newHead, snake)) {
       gameOver();
       return;
     }
@@ -352,21 +299,13 @@ const GameBoard: React.FC = () => {
     }
 
     if (eatenCollectible) {
-      const newCollectibles = collectibles.filter(
-        (c) => c.id !== eatenCollectible.id
-      );
+      const newCollectibles = collectibles.filter(c => c.id !== eatenCollectible.id);
+      const currentCapacity = useGameStore.getState().capacity;
+      const totalWeight = currentWeightRef.current + eatenCollectible.weight;
 
-      const inventoryItem = collectibleToInventoryItem(eatenCollectible);
-      const newInventoryWeight =
-        stats.inventoryCurrentWeight + eatenCollectible.weight;
-
-      // Don't add score for collectibles, only add them to inventory
-      if (newInventoryWeight <= stats.inventoryCapacity) {
-        setInventory((prev) => [...prev, inventoryItem]);
-        setStats((prev) => ({
-          ...prev,
-          inventoryCurrentWeight: newInventoryWeight,
-        }));
+      if (totalWeight <= currentCapacity) {
+        setInventory(prev => [...prev, collectibleToInventoryItem(eatenCollectible)]);
+        setStats(prev => ({ ...prev, inventoryCurrentWeight: totalWeight }));
       } else {
         toast.error("Inventory full! Collectible not stored.");
       }
@@ -400,17 +339,25 @@ const GameBoard: React.FC = () => {
     }
   }, [
     gameState,
-    nextDirection,
     snake,
     food,
     collectibles,
-    stats.inventoryCapacity,
-    stats.inventoryCurrentWeight,
     foodEatenSinceLastCollectible,
     gameOver,
     checkWinCondition,
     updateHintPath,
   ]);
+
+  const handleDirectionButton = (newDirection: Direction) => {
+    const currentDirection = directionRef.current;
+    const oppositeDirection = getOppositeDirection(currentDirection);
+    
+    if (newDirection !== oppositeDirection && 
+        newDirection !== currentDirection &&
+        directionQueue.current[directionQueue.current.length - 1] !== newDirection) {
+      directionQueue.current.push(newDirection);
+    }
+  };
 
   const calculateHint = useCallback(() => {
     if (gameState !== GameState.PLAYING) return;
@@ -450,41 +397,24 @@ const GameBoard: React.FC = () => {
 
       switch (e.key) {
         case "ArrowUp":
-          if (direction !== Direction.DOWN) {
-            setNextDirection(Direction.UP);
-          }
+          handleDirectionButton(Direction.UP);
           break;
         case "ArrowDown":
-          if (direction !== Direction.UP) {
-            setNextDirection(Direction.DOWN);
-          }
+          handleDirectionButton(Direction.DOWN);
           break;
         case "ArrowLeft":
-          if (direction !== Direction.RIGHT) {
-            setNextDirection(Direction.LEFT);
-          }
+          handleDirectionButton(Direction.LEFT);
           break;
         case "ArrowRight":
-          if (direction !== Direction.LEFT) {
-            setNextDirection(Direction.RIGHT);
-          }
+          handleDirectionButton(Direction.RIGHT);
           break;
         case "h":
           calculateHint();
           break;
       }
     },
-    [direction, gameState, calculateHint]
+    [gameState, calculateHint]
   );
-
-  const handleDirectionButton = (newDirection: Direction) => {
-    if (gameState !== GameState.PLAYING) return;
-
-    const oppositeDir = getOppositeDirection(direction);
-    if (newDirection !== oppositeDir) {
-      setNextDirection(newDirection);
-    }
-  };
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -701,7 +631,7 @@ const GameBoard: React.FC = () => {
                           <div>
                             <p className="text-gray-400 text-sm">Coins</p>
                             <p className="text-xl font-bold text-yellow-400">
-                              {stats.coinsCollected}
+                              {coins}
                             </p>
                           </div>
                         </div>
@@ -741,7 +671,7 @@ const GameBoard: React.FC = () => {
                           <div>
                             <p className="text-gray-400 text-sm">Coins</p>
                             <p className="text-xl font-bold text-yellow-400">
-                              {stats.coinsCollected}
+                              {coins}
                             </p>
                           </div>
                         </div>
@@ -848,20 +778,9 @@ const GameBoard: React.FC = () => {
                 <span className="font-pixel text-xs text-white">Coins</span>
               </div>
               <span className="font-pixel text-lg text-white mt-1">
-                {stats.coinsCollected}
+                {coins}
               </span>
             </div>
-          </div>
-
-          <div className="flex justify-between mt-4">
-            <PixelButton
-              variant="secondary"
-              onClick={resetGame}
-              disabled={gameState === GameState.PLAYING}
-            >
-              <RotateCcw size={16} className="mr-2" />
-              Reset
-            </PixelButton>
           </div>
 
           <div className="flex text-center justify-center mt-2 text-[8px] font-pixel text-muted-foreground">
@@ -873,15 +792,15 @@ const GameBoard: React.FC = () => {
         </PixelatedContainer>
 
         <Inventory
-          items={inventory.filter((item) =>
-            Object.values(CollectibleType).includes(
-              item.type as CollectibleType
-            )
+          items={useMemo(() => 
+            inventory.filter((item) =>
+              Object.values(CollectibleType).includes(item.type as CollectibleType)
+            ), 
+            [inventory] // Only recompute when inventory changes
           )}
-          capacity={stats.inventoryCapacity}
+          capacity={useGameStore.getState().capacity}
           currentWeight={stats.inventoryCurrentWeight}
           onDeleteItem={handleDeleteInventoryItem}
-          onCapacityChange={handleCapacityChange}
         />
       </div>
     </div>

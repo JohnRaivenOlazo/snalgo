@@ -1,4 +1,3 @@
-
 export interface Position {
   x: number;
   y: number;
@@ -70,7 +69,6 @@ export interface InventoryProps {
   capacity: number;
   currentWeight: number;
   onDeleteItem?: (id: string) => void;
-  onCapacityChange?: (newCapacity: number) => void;
 }
 
 export interface InventoryItem {
