@@ -21,8 +21,8 @@ const Food: React.FC<FoodProps> = ({ food, collectibles }) => {
 
   const getCollectibleIcon = (type: string) => {
     switch (type) {
-      case "COIN":
-        return <Coins className="text-yellow-500 drop-shadow-lg" size={CELL_SIZE - 4} />;
+      case "CRYSTAL":
+        return <Diamond className="text-green-500 drop-shadow-lg" size={CELL_SIZE - 4} />;
       case "GEM":
         return <Diamond className="text-blue-500 drop-shadow-lg" size={CELL_SIZE - 4} />;
       case "POTION":
@@ -30,7 +30,7 @@ const Food: React.FC<FoodProps> = ({ food, collectibles }) => {
       case "ARTIFACT":
         return <Star className="text-orange-500 drop-shadow-lg" size={CELL_SIZE - 4} />;
       default:
-        return <Coins className="text-yellow-500 drop-shadow-lg" size={CELL_SIZE - 4} />;
+        return <Diamond className="text-green-500 drop-shadow-lg" size={CELL_SIZE - 4} />;
     }
   };
 

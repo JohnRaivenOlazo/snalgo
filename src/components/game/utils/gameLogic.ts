@@ -30,7 +30,7 @@ export const FOOD_COLORS = {
 
 // Collectible colors
 export const COLLECTIBLE_COLORS = {
-  [CollectibleType.COIN]: 'rgb(234, 179, 8)',
+  [CollectibleType.CRYSTAL]: 'rgb(76, 175, 80)',
   [CollectibleType.GEM]: 'rgb(59, 130, 246)',
   [CollectibleType.POTION]: 'rgb(147, 51, 234)',
   [CollectibleType.ARTIFACT]: 'rgb(239, 68, 68)',
@@ -46,13 +46,13 @@ export const FOOD_PROPERTIES = {
 
 // Collectible properties - adjusted for beginners
 export const COLLECTIBLE_PROPERTIES = {
-  [CollectibleType.COIN]: { 
-    minValue: 2, 
-    maxValue: 5, 
-    minWeight: 1, 
-    maxWeight: 3, 
-    minSellValue: 1, 
-    maxSellValue: 3 
+  [CollectibleType.CRYSTAL]: { 
+    minValue: 2,
+    maxValue: 5,
+    minWeight: 1,
+    maxWeight: 3,
+    minSellValue: 1,
+    maxSellValue: 3
   },
   [CollectibleType.GEM]: { 
     minValue: 5, 

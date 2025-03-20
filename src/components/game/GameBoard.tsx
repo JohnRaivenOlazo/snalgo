@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   Direction,
   FoodItem,
@@ -33,9 +39,7 @@ import {
   MAX_COLLECTIBLES,
   COLLECTIBLE_THRESHOLD,
 } from "@/components/game/utils/gameLogic";
-import {
-  tspNearestNeighbor,
-} from "@/components/game/utils/algorithms";
+import { tspNearestNeighbor } from "@/components/game/utils/algorithms";
 import {
   ChevronUp,
   ChevronDown,
@@ -43,9 +47,9 @@ import {
   ChevronRight,
   Star,
   Trophy,
-  Lightbulb
+  Lightbulb,
 } from "lucide-react";
-import { useGameStore } from '@/stores/useGameStore';
+import { useGameStore } from "@/stores/useGameStore";
 
 const GameBoard: React.FC = () => {
   const [snake, setSnake] = useState<SnakeSegment[]>([]);
@@ -90,15 +94,16 @@ const GameBoard: React.FC = () => {
   useEffect(() => {
     const updateGridSize = () => {
       if (boardRef.current?.parentElement) {
-        const { width } = boardRef.current.parentElement.getBoundingClientRect();
+        const { width } =
+          boardRef.current.parentElement.getBoundingClientRect();
         const calculatedGridSizeX = Math.floor(width / CELL_SIZE);
-        
+
         // Set fixed height of 20 cells
         const fixedGridSizeY = 20;
-        
+
         setGridSizeX(calculatedGridSizeX);
         setGridSizeY(fixedGridSizeY);
-        
+
         if (boardRef.current) {
           boardRef.current.style.width = `${calculatedGridSizeX * CELL_SIZE}px`;
           boardRef.current.style.height = `${fixedGridSizeY * CELL_SIZE}px`;
@@ -125,7 +130,9 @@ const GameBoard: React.FC = () => {
 
     const initialFood: FoodItem[] = [];
     for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
-      initialFood.push(generateFood(initialSnake, initialFood, [], gridSizeX, gridSizeY));
+      initialFood.push(
+        generateFood(initialSnake, initialFood, [], gridSizeX, gridSizeY)
+      );
     }
     setFood(initialFood);
 
@@ -192,29 +199,35 @@ const GameBoard: React.FC = () => {
     }
   }, [stats.score, stats.highScore]);
 
-  const handleDeleteInventoryItem = useCallback((itemId: string) => {
-    setInventory(prevInventory => {
-      const item = prevInventory.find((i) => i.id === itemId);
-      if (!item) return prevInventory;
+  const handleDeleteInventoryItem = useCallback(
+    (itemId: string) => {
+      setInventory((prevInventory) => {
+        const item = prevInventory.find((i) => i.id === itemId);
+        if (!item) return prevInventory;
 
-      // Split state updates from side effects
-      const newInventory = prevInventory.filter((i) => i.id !== itemId);
-      
-      // Queue the side effects to run after state update
-      setTimeout(() => {
-        if (item.sellValue) {
-          addCoins(item.sellValue);
-          setStats(prev => ({
-            ...prev,
-            inventoryCurrentWeight: Math.max(0, prev.inventoryCurrentWeight - item.weight)
-          }));
-          toast.success(`Sold for ${item.sellValue} coins!`);
-        }
-      }, 0);
+        // Split state updates from side effects
+        const newInventory = prevInventory.filter((i) => i.id !== itemId);
 
-      return newInventory;
-    });
-  }, [addCoins]);
+        // Queue the side effects to run after state update
+        setTimeout(() => {
+          if (item.sellValue) {
+            addCoins(item.sellValue);
+            setStats((prev) => ({
+              ...prev,
+              inventoryCurrentWeight: Math.max(
+                0,
+                prev.inventoryCurrentWeight - item.weight
+              ),
+            }));
+            toast.success(`Sold for ${item.sellValue} coins!`);
+          }
+        }, 0);
+
+        return newInventory;
+      });
+    },
+    [addCoins]
+  );
 
   const updateHintPath = useCallback(
     (head: Position) => {
@@ -245,7 +258,7 @@ const GameBoard: React.FC = () => {
     while (directionQueue.current.length > 0) {
       const nextDir = directionQueue.current.shift()!;
       const oppositeDirection = getOppositeDirection(newDirection);
-      
+
       if (nextDir !== oppositeDirection) {
         newDirection = nextDir;
         break; // Only process one valid direction per frame
@@ -264,7 +277,10 @@ const GameBoard: React.FC = () => {
       id: crypto.randomUUID(),
     };
 
-    if (willHitWall(head, newDirection, gridSizeX, gridSizeY) || willHitSelf(newHead, snake)) {
+    if (
+      willHitWall(head, newDirection, gridSizeX, gridSizeY) ||
+      willHitSelf(newHead, snake)
+    ) {
       gameOver();
       return;
     }
@@ -320,7 +336,13 @@ const GameBoard: React.FC = () => {
         const additionalFood: React.SetStateAction<FoodItem[]> | undefined = [];
         for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
           additionalFood.push(
-            generateFood(newSnake, additionalFood, collectibles, gridSizeX, gridSizeY)
+            generateFood(
+              newSnake,
+              additionalFood,
+              collectibles,
+              gridSizeX,
+              gridSizeY
+            )
           );
         }
         setFood(additionalFood);
@@ -341,13 +363,18 @@ const GameBoard: React.FC = () => {
     }
 
     if (eatenCollectible) {
-      const newCollectibles = collectibles.filter(c => c.id !== eatenCollectible.id);
+      const newCollectibles = collectibles.filter(
+        (c) => c.id !== eatenCollectible.id
+      );
       const currentCapacity = useGameStore.getState().capacity;
       const totalWeight = currentWeightRef.current + eatenCollectible.weight;
 
       if (totalWeight <= currentCapacity) {
-        setInventory(prev => [...prev, collectibleToInventoryItem(eatenCollectible)]);
-        setStats(prev => ({ ...prev, inventoryCurrentWeight: totalWeight }));
+        setInventory((prev) => [
+          ...prev,
+          collectibleToInventoryItem(eatenCollectible),
+        ]);
+        setStats((prev) => ({ ...prev, inventoryCurrentWeight: totalWeight }));
       } else {
         toast.error("Inventory full! Collectible not stored.");
       }
@@ -358,7 +385,9 @@ const GameBoard: React.FC = () => {
       if (food.length === 0 && newCollectibles.length === 0) {
         const additionalFood = [];
         for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
-          additionalFood.push(generateFood(newSnake, [], [], gridSizeX, gridSizeY));
+          additionalFood.push(
+            generateFood(newSnake, [], [], gridSizeX, gridSizeY)
+          );
         }
         setFood(additionalFood);
       }
@@ -395,10 +424,12 @@ const GameBoard: React.FC = () => {
   const handleDirectionButton = (newDirection: Direction) => {
     const currentDirection = directionRef.current;
     const oppositeDirection = getOppositeDirection(currentDirection);
-    
-    if (newDirection !== oppositeDirection && 
-        newDirection !== currentDirection &&
-        directionQueue.current[directionQueue.current.length - 1] !== newDirection) {
+
+    if (
+      newDirection !== oppositeDirection &&
+      newDirection !== currentDirection &&
+      directionQueue.current[directionQueue.current.length - 1] !== newDirection
+    ) {
       directionQueue.current.push(newDirection);
     }
   };
@@ -507,50 +538,59 @@ const GameBoard: React.FC = () => {
             }}
           >
             {/* Add depth effect */}
-            <div className="absolute inset-0 z-0" 
-                 style={{
-                   boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.3)'
-                 }} />
+            <div
+              className="absolute inset-0 z-0"
+              style={{
+                boxShadow: "inset 0 0 50px rgba(0, 0, 0, 0.3)",
+              }}
+            />
 
             {/* Add subtle scanlines */}
-            <div className="absolute inset-0 z-50 pointer-events-none"
-                 style={{
-                   backgroundImage: `repeating-linear-gradient(
+            <div
+              className="absolute inset-0 z-50 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
                      0deg,
                      rgba(0, 0, 0, 0.1) 0px,
                      rgba(0, 0, 0, 0.1) 1px,
                      transparent 1px,
                      transparent 3px
-                   )`
-                 }} />
+                   )`,
+              }}
+            />
 
             {/* Add holographic snake trail effect */}
             {snake.map((segment) => (
               <div key={segment.id} className="absolute z-10" />
             ))}
 
-            {!hint.length && <div className="absolute top-0 left-0 w-full h-full" 
-                 style={{
-                   backgroundImage: `
+            {!hint.length && (
+              <div
+                className="absolute top-0 left-0 w-full h-full"
+                style={{
+                  backgroundImage: `
                      linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
                      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
                    `,
-                   backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
-                 }}
-            />}
+                  backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                }}
+              />
+            )}
 
             {hint.length > 0 && (
               <div className="absolute top-0 left-0 w-full h-full z-5">
                 {/* Add semi-transparent overlay */}
-                <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
-                     style={{
-                       backgroundImage: `
+                <div
+                  className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
+                  style={{
+                    backgroundImage: `
                          linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                          linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
                        `,
-                       backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
-                     }} />
-                
+                    backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                  }}
+                />
+
                 <svg
                   width={gridSizeX * CELL_SIZE}
                   height={gridSizeY * CELL_SIZE}
@@ -577,7 +617,11 @@ const GameBoard: React.FC = () => {
                       cx={pos.x * CELL_SIZE + CELL_SIZE / 2}
                       cy={pos.y * CELL_SIZE + CELL_SIZE / 2}
                       r={i === 0 ? 6 : 4}
-                      fill={i === 0 ? "hsl(var(--game-snake))" : "hsl(var(--primary))"}
+                      fill={
+                        i === 0
+                          ? "hsl(var(--game-snake))"
+                          : "hsl(var(--primary))"
+                      }
                       stroke="var(--background)"
                       strokeWidth="2"
                     />
@@ -597,61 +641,6 @@ const GameBoard: React.FC = () => {
                 </svg>
               </div>
             )}
-
-            {snake.map((segment, index) => (
-              <div
-                key={segment.id}
-                className="absolute transition-all duration-100 ease-linear"
-                style={{
-                  width: `${CELL_SIZE}px`,
-                  height: `${CELL_SIZE}px`,
-                  left: `${segment.x * CELL_SIZE}px`,
-                  top: `${segment.y * CELL_SIZE}px`,
-                  background:
-                    index === 0
-                      ? "linear-gradient(135deg, #10B981 0%, #059669 100%)"
-                      : "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                  borderRadius: index === 0 ? "8px" : "6px",
-                  transform: index === 0 ? "scale(1.1)" : "scale(1)",
-                  boxShadow:
-                    index === 0
-                      ? "0 0 15px rgba(16, 185, 129, 0.5)"
-                      : "0 0 10px rgba(5, 150, 105, 0.3)",
-                  zIndex: snake.length - index,
-                }}
-              />
-            ))}
-
-            {food.map((item) => (
-              <div
-                key={item.id}
-                className="absolute animate-pulse"
-                style={{
-                  width: `${CELL_SIZE}px`,
-                  height: `${CELL_SIZE}px`,
-                  left: `${item.position.x * CELL_SIZE}px`,
-                  top: `${item.position.y * CELL_SIZE}px`,
-                }}
-              />
-            ))}
-
-            {collectibles.map((item) => (
-              <div
-                key={item.id}
-                className="absolute animate-bounce"
-                style={{
-                  width: `${CELL_SIZE}px`,
-                  height: `${CELL_SIZE}px`,
-                  left: `${item.position.x * CELL_SIZE}px`,
-                  top: `${item.position.y * CELL_SIZE}px`,
-                  background:
-                    "linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)",
-                  borderRadius: "50%",
-                  boxShadow: "0 0 25px rgba(251, 191, 36, 0.7)",
-                  animation: "bounce 1s infinite",
-                }}
-              />
-            ))}
 
             <Snake segments={snake} />
             <Food food={food} collectibles={collectibles} />
@@ -852,10 +841,13 @@ const GameBoard: React.FC = () => {
         </PixelatedContainer>
 
         <Inventory
-          items={useMemo(() => 
-            inventory.filter((item) =>
-              Object.values(CollectibleType).includes(item.type as CollectibleType)
-            ), 
+          items={useMemo(
+            () =>
+              inventory.filter((item) =>
+                Object.values(CollectibleType).includes(
+                  item.type as CollectibleType
+                )
+              ),
             [inventory] // Only recompute when inventory changes
           )}
           capacity={useGameStore.getState().capacity}

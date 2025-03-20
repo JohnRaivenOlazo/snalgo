@@ -31,8 +31,8 @@ const Inventory: React.FC<InventoryProps> = ({
 
   const getCollectibleIcon = (type: CollectibleType) => {
     switch (type) {
-      case CollectibleType.COIN:
-        return <Coins className="text-yellow-500 drop-shadow-md" size={16} />;
+      case CollectibleType.CRYSTAL:
+        return <Diamond className="text-green-500 drop-shadow-md" size={16} />;
       case CollectibleType.GEM:
         return <Diamond className="text-blue-500 drop-shadow-md" size={16} />;
       case CollectibleType.POTION:

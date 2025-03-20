@@ -58,7 +58,7 @@ export enum GameState {
 }
 
 export enum CollectibleType {
-  COIN = "COIN",
+  CRYSTAL = "CRYSTAL",
   GEM = "GEM",
   POTION = "POTION",
   ARTIFACT = "ARTIFACT"

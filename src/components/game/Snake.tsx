@@ -38,7 +38,6 @@ const Snake: React.FC<SnakeProps> = ({ segments }) => {
               transform: `scale(${segmentSize})`,
               opacity: segmentOpacity,
               transition: "all 0.1s linear",
-              boxShadow: "inset 0 0 4px rgba(255, 255, 255, 0.3)"
             }}
           ></div>
         );
