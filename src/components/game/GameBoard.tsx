@@ -44,8 +44,7 @@ import {
   ChevronRight,
   Star,
   Trophy,
-  Lightbulb,
-  Coins,
+  Lightbulb
 } from "lucide-react";
 import { useGameStore } from '@/stores/useGameStore';
 
@@ -751,7 +750,7 @@ const GameBoard: React.FC = () => {
       </div>
       <div className="md:col-span-1 flex flex-col gap-4">
         <PixelatedContainer className="p-4 flex flex-col gap-4">
-          <div className="grid grid-cols-3 gap-4 mt-2">
+          <div className="grid grid-cols-2 gap-4 mt-2">
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1">
                 <Star className="text-yellow-500" size={16} />
@@ -769,16 +768,6 @@ const GameBoard: React.FC = () => {
               </div>
               <span className="font-pixel text-lg text-white mt-1">
                 {stats.highScore}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Coins className="text-yellow-500" size={16} />
-                <span className="font-pixel text-xs text-white">Coins</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {coins}
               </span>
             </div>
           </div>
