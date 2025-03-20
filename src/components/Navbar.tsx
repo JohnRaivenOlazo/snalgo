@@ -2,13 +2,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store, HelpCircle, Home } from 'lucide-react';
+import { Store, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 const Navbar = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Home', href: '/', icon: Home },
     { name: 'Store', href: '/store', icon: Store },
     { name: 'Help', href: '/help', icon: HelpCircle },
   ];
@@ -27,7 +26,7 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:block">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -36,7 +35,7 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center px-4 py-2 rounded-lg font-pixel text-sm transition-all duration-200
+                    className={`flex items-center px-3 py-1 rounded-lg font-pixel text-sm transition-all duration-200
                       ${isActive 
                         ? 'bg-game-snake text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]' 
                         : 'text-muted-foreground hover:text-white hover:bg-muted/30'

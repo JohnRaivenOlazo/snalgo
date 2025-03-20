@@ -134,7 +134,7 @@ const Inventory: React.FC<InventoryProps> = ({
     setFilteredItems(sortedItems);
   };
 
-  const handleCapacityUpgrade = () => {
+  export const handleCapacityUpgrade = () => {
     if (onCapacityChange) {
       const newCapacity = capacity + 10;
       onCapacityChange(newCapacity);

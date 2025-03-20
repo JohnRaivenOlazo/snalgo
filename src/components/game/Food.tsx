@@ -2,7 +2,7 @@
 import React from "react";
 import { FoodProps } from "@/components/game/utils/types";
 import { CELL_SIZE } from "@/components/game/utils/gameLogic";
-import { Apple, Cherry, Banana, Grape, Coins, Diamond, Star, Zap, Sparkles } from "lucide-react";
+import { Apple, Cherry, Banana, Grape, Coins, Diamond, Star, Zap } from "lucide-react";
 
 const Food: React.FC<FoodProps> = ({ food, collectibles }) => {
   const getFoodIcon = (type: string) => {

@@ -92,7 +92,11 @@ const GameBoard: React.FC = () => {
     setFood(initialFood);
 
     // Add initial collectible
-    const initialCollectible = generateCollectible(initialSnake, initialFood, []);
+    const initialCollectible = generateCollectible(
+      initialSnake,
+      initialFood,
+      []
+    );
     setCollectibles([initialCollectible]);
     setFoodEatenSinceLastCollectible(0);
     setGameState(GameState.READY);
@@ -164,7 +168,10 @@ const GameBoard: React.FC = () => {
         setStats((prev) => ({
           ...prev,
           coinsCollected: prev.coinsCollected + item.sellValue!,
-          inventoryCurrentWeight: Math.max(0, prev.inventoryCurrentWeight - item.weight),
+          inventoryCurrentWeight: Math.max(
+            0,
+            prev.inventoryCurrentWeight - item.weight
+          ),
         }));
         toast.success(`Sold for ${item.sellValue} coins!`);
       }
@@ -334,7 +341,10 @@ const GameBoard: React.FC = () => {
 
       // Don't reset the hint path or hintActiveRef if the hint is active
       // Only update the path if hint is active
-      if (hintActiveRef.current && (newFood.length > 0 || collectibles.length > 0)) {
+      if (
+        hintActiveRef.current &&
+        (newFood.length > 0 || collectibles.length > 0)
+      ) {
         updateHintPath(newSnake[0]);
       }
 
@@ -374,7 +384,10 @@ const GameBoard: React.FC = () => {
 
       // Don't reset the hint path or hintActiveRef if the hint is active
       // Only update the path if hint is active
-      if (hintActiveRef.current && (food.length > 0 || newCollectibles.length > 0)) {
+      if (
+        hintActiveRef.current &&
+        (food.length > 0 || newCollectibles.length > 0)
+      ) {
         updateHintPath(newSnake[0]);
       }
 
@@ -397,12 +410,11 @@ const GameBoard: React.FC = () => {
     gameOver,
     checkWinCondition,
     updateHintPath,
-
   ]);
 
   const calculateHint = useCallback(() => {
     if (gameState !== GameState.PLAYING) return;
-    
+
     // Toggle hint on/off
     if (hintActiveRef.current) {
       // Turn off hint
@@ -415,15 +427,15 @@ const GameBoard: React.FC = () => {
         toast.error("No targets available for path optimization");
         return;
       }
-      
+
       const head = snake[0];
       const allPositions = [
         ...food.map((f) => f.position),
         ...collectibles.map((c) => c.position),
       ];
-      
+
       const route = tspNearestNeighbor(head, allPositions);
-      
+
       setHint(route);
       hintActiveRef.current = true;
       toast("Path optimization enabled!");
@@ -511,72 +523,6 @@ const GameBoard: React.FC = () => {
 
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="md:col-span-1 flex flex-col gap-4">
-        <PixelatedContainer className="p-4 flex flex-col gap-4">
-          <div className="grid grid-cols-4 gap-4 mt-2">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Star className="text-yellow-500" size={16} />
-                <span className="font-pixel text-xs text-white">Score</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {stats.score}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Trophy className="text-yellow-500" size={16} />
-                <span className="font-pixel text-xs text-white">Best</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {stats.highScore}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Coins className="text-yellow-500" size={16} />
-                <span className="font-pixel text-xs text-white">Coins</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {stats.coinsCollected}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex justify-between mt-4">
-            <PixelButton
-              variant="secondary"
-              onClick={resetGame}
-              disabled={gameState === GameState.PLAYING}
-            >
-              <RotateCcw size={16} className="mr-2" />
-              Reset
-            </PixelButton>
-          </div>
-
-          <div className="flex text-center justify-center mt-2 text-[8px] font-pixel text-muted-foreground">
-            <p>
-              Food eaten: {foodEatenSinceLastCollectible}/
-              {COLLECTIBLE_THRESHOLD} until next collectible
-            </p>
-          </div>
-        </PixelatedContainer>
-
-        <Inventory
-          items={inventory.filter((item) =>
-            Object.values(CollectibleType).includes(
-              item.type as CollectibleType
-            )
-          )}
-          capacity={stats.inventoryCapacity}
-          currentWeight={stats.inventoryCurrentWeight}
-          onDeleteItem={handleDeleteInventoryItem}
-          onCapacityChange={handleCapacityChange}
-        />
-      </div>
-
       <div className="md:col-span-2">
         <div className="relative">
           <PixelatedContainer className="overflow-hidden relative" tabIndex={0}>
@@ -586,7 +532,8 @@ const GameBoard: React.FC = () => {
                 width: `${GRID_SIZE * CELL_SIZE}px`,
                 height: `${GRID_SIZE * CELL_SIZE}px`,
                 margin: "0 auto",
-                background: "linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%)",
                 borderRadius: "8px",
               }}
               ref={boardRef}
@@ -659,14 +606,16 @@ const GameBoard: React.FC = () => {
                     height: `${CELL_SIZE}px`,
                     left: `${segment.x * CELL_SIZE}px`,
                     top: `${segment.y * CELL_SIZE}px`,
-                    background: index === 0 
-                      ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" 
-                      : "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                    background:
+                      index === 0
+                        ? "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                        : "linear-gradient(135deg, #059669 0%, #047857 100%)",
                     borderRadius: index === 0 ? "8px" : "6px",
                     transform: index === 0 ? "scale(1.1)" : "scale(1)",
-                    boxShadow: index === 0 
-                      ? "0 0 15px rgba(16, 185, 129, 0.5)" 
-                      : "0 0 10px rgba(5, 150, 105, 0.3)",
+                    boxShadow:
+                      index === 0
+                        ? "0 0 15px rgba(16, 185, 129, 0.5)"
+                        : "0 0 10px rgba(5, 150, 105, 0.3)",
                     zIndex: snake.length - index,
                   }}
                 />
@@ -694,7 +643,8 @@ const GameBoard: React.FC = () => {
                     height: `${CELL_SIZE}px`,
                     left: `${item.position.x * CELL_SIZE}px`,
                     top: `${item.position.y * CELL_SIZE}px`,
-                    background: "linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)",
+                    background:
+                      "linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)",
                     borderRadius: "50%",
                     boxShadow: "0 0 25px rgba(251, 191, 36, 0.7)",
                     animation: "bounce 1s infinite",
@@ -713,11 +663,12 @@ const GameBoard: React.FC = () => {
                         Snake Game
                       </h2>
                       <p className="font-pixel text-sm text-white/80 mb-6">
-                        Use arrow keys or touch controls to guide the snake.<br/>
+                        Use arrow keys or touch controls to guide the snake.
+                        <br />
                         Press &apos;H&apos; for path optimization.
                       </p>
-                      <PixelButton 
-                        onClick={startGame} 
+                      <PixelButton
+                        onClick={startGame}
                         size="lg"
                         className="transform hover:scale-110 transition-transform duration-200"
                       >
@@ -725,7 +676,6 @@ const GameBoard: React.FC = () => {
                       </PixelButton>
                     </div>
                   )}
-
 
                   {gameState === GameState.GAME_OVER && (
                     <div className="text-center animate-pixel-shake">
@@ -744,16 +694,20 @@ const GameBoard: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4 mt-4">
                           <div>
                             <p className="text-gray-400 text-sm">Food Eaten</p>
-                            <p className="text-xl font-bold text-white">{stats.foodEaten}</p>
+                            <p className="text-xl font-bold text-white">
+                              {stats.foodEaten}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-400 text-sm">Coins</p>
-                            <p className="text-xl font-bold text-yellow-400">{stats.coinsCollected}</p>
+                            <p className="text-xl font-bold text-yellow-400">
+                              {stats.coinsCollected}
+                            </p>
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-4 justify-center">
-                        <PixelButton 
+                        <PixelButton
                           onClick={startGame}
                           className="transform hover:scale-110 transition-transform duration-200"
                         >
@@ -780,16 +734,20 @@ const GameBoard: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4 mt-4">
                           <div>
                             <p className="text-gray-400 text-sm">Food Eaten</p>
-                            <p className="text-xl font-bold text-white">{stats.foodEaten}</p>
+                            <p className="text-xl font-bold text-white">
+                              {stats.foodEaten}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-400 text-sm">Coins</p>
-                            <p className="text-xl font-bold text-yellow-400">{stats.coinsCollected}</p>
+                            <p className="text-xl font-bold text-yellow-400">
+                              {stats.coinsCollected}
+                            </p>
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-4 justify-center">
-                        <PixelButton 
+                        <PixelButton
                           onClick={startGame}
                           className="transform hover:scale-110 transition-transform duration-200"
                         >
@@ -808,13 +766,17 @@ const GameBoard: React.FC = () => {
               onClick={calculateHint}
               disabled={
                 gameState !== GameState.PLAYING ||
-                (food.length === 0 && collectibles.length === 0 && !hintActiveRef.current)
+                (food.length === 0 &&
+                  collectibles.length === 0 &&
+                  !hintActiveRef.current)
               }
               variant={hintActiveRef.current ? "primary" : "secondary"}
               className="w-full transform hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-xl"
             >
               <Lightbulb size={16} className="mr-2" />
-              {hintActiveRef.current ? "Disable Path Optimization" : "Optimize Path (TSP)"}
+              {hintActiveRef.current
+                ? "Disable Path Optimization"
+                : "Optimize Path (TSP)"}
             </PixelButton>
           </div>
 
@@ -856,6 +818,71 @@ const GameBoard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+      <div className="md:col-span-1 flex flex-col gap-4">
+        <PixelatedContainer className="p-4 flex flex-col gap-4">
+          <div className="grid grid-cols-3 gap-4 mt-2">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <Star className="text-yellow-500" size={16} />
+                <span className="font-pixel text-xs text-white">Score</span>
+              </div>
+              <span className="font-pixel text-lg text-white mt-1">
+                {stats.score}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <Trophy className="text-yellow-500" size={16} />
+                <span className="font-pixel text-xs text-white">Best</span>
+              </div>
+              <span className="font-pixel text-lg text-white mt-1">
+                {stats.highScore}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <Coins className="text-yellow-500" size={16} />
+                <span className="font-pixel text-xs text-white">Coins</span>
+              </div>
+              <span className="font-pixel text-lg text-white mt-1">
+                {stats.coinsCollected}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-between mt-4">
+            <PixelButton
+              variant="secondary"
+              onClick={resetGame}
+              disabled={gameState === GameState.PLAYING}
+            >
+              <RotateCcw size={16} className="mr-2" />
+              Reset
+            </PixelButton>
+          </div>
+
+          <div className="flex text-center justify-center mt-2 text-[8px] font-pixel text-muted-foreground">
+            <p>
+              Food eaten: {foodEatenSinceLastCollectible}/
+              {COLLECTIBLE_THRESHOLD} until next collectible
+            </p>
+          </div>
+        </PixelatedContainer>
+
+        <Inventory
+          items={inventory.filter((item) =>
+            Object.values(CollectibleType).includes(
+              item.type as CollectibleType
+            )
+          )}
+          capacity={stats.inventoryCapacity}
+          currentWeight={stats.inventoryCurrentWeight}
+          onDeleteItem={handleDeleteInventoryItem}
+          onCapacityChange={handleCapacityChange}
+        />
       </div>
     </div>
   );
