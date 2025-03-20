@@ -18,7 +18,6 @@ import PixelButton from "../ui/PixelButton";
 import { toast } from "sonner";
 import {
   createInitialSnake,
-  GRID_SIZE,
   CELL_SIZE,
   getNewHeadPosition,
   willHitWall,
@@ -85,6 +84,40 @@ const GameBoard: React.FC = () => {
     directionRef.current = direction;
   }, [direction]);
 
+  const [gridSizeX, setGridSizeX] = useState(0);
+  const [gridSizeY, setGridSizeY] = useState(0);
+
+  useEffect(() => {
+    const updateGridSize = () => {
+      if (boardRef.current?.parentElement) {
+        const { width } = boardRef.current.parentElement.getBoundingClientRect();
+        const calculatedGridSizeX = Math.floor(width / CELL_SIZE);
+        
+        // Set fixed height of 20 cells
+        const fixedGridSizeY = 20;
+        
+        setGridSizeX(calculatedGridSizeX);
+        setGridSizeY(fixedGridSizeY);
+        
+        if (boardRef.current) {
+          boardRef.current.style.width = `${calculatedGridSizeX * CELL_SIZE}px`;
+          boardRef.current.style.height = `${fixedGridSizeY * CELL_SIZE}px`;
+        }
+      }
+    };
+
+    // Initial calculation
+    updateGridSize();
+
+    // Add resize observer
+    const resizeObserver = new ResizeObserver(updateGridSize);
+    if (boardRef.current?.parentElement) {
+      resizeObserver.observe(boardRef.current.parentElement);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
   const initGame = useCallback(() => {
     const initialSnake = createInitialSnake();
     setSnake(initialSnake);
@@ -92,14 +125,16 @@ const GameBoard: React.FC = () => {
 
     const initialFood: FoodItem[] = [];
     for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
-      initialFood.push(generateFood(initialSnake, initialFood, []));
+      initialFood.push(generateFood(initialSnake, initialFood, [], gridSizeX, gridSizeY));
     }
     setFood(initialFood);
 
     const initialCollectible = generateCollectible(
       initialSnake,
       initialFood,
-      []
+      [],
+      gridSizeX,
+      gridSizeY
     );
     setCollectibles([initialCollectible]);
     setFoodEatenSinceLastCollectible(0);
@@ -116,7 +151,7 @@ const GameBoard: React.FC = () => {
       inventoryCurrentWeight: prev.inventoryCurrentWeight,
       level: 1,
     }));
-  }, []);
+  }, [gridSizeX, gridSizeY]);
 
   const startGame = useCallback(() => {
     if (
@@ -229,7 +264,7 @@ const GameBoard: React.FC = () => {
       id: crypto.randomUUID(),
     };
 
-    if (willHitWall(head, newDirection) || willHitSelf(newHead, snake)) {
+    if (willHitWall(head, newDirection, gridSizeX, gridSizeY) || willHitSelf(newHead, snake)) {
       gameOver();
       return;
     }
@@ -271,7 +306,9 @@ const GameBoard: React.FC = () => {
         const newCollectible = generateCollectible(
           newSnake,
           newFood,
-          collectibles
+          collectibles,
+          gridSizeX,
+          gridSizeY
         );
         setCollectibles((prev) => [...prev, newCollectible]);
         setFoodEatenSinceLastCollectible(0);
@@ -283,7 +320,7 @@ const GameBoard: React.FC = () => {
         const additionalFood: React.SetStateAction<FoodItem[]> | undefined = [];
         for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
           additionalFood.push(
-            generateFood(newSnake, additionalFood, collectibles)
+            generateFood(newSnake, additionalFood, collectibles, gridSizeX, gridSizeY)
           );
         }
         setFood(additionalFood);
@@ -321,7 +358,7 @@ const GameBoard: React.FC = () => {
       if (food.length === 0 && newCollectibles.length === 0) {
         const additionalFood = [];
         for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
-          additionalFood.push(generateFood(newSnake, [], []));
+          additionalFood.push(generateFood(newSnake, [], [], gridSizeX, gridSizeY));
         }
         setFood(additionalFood);
       }
@@ -351,6 +388,8 @@ const GameBoard: React.FC = () => {
     gameOver,
     checkWinCondition,
     updateHintPath,
+    gridSizeX,
+    gridSizeY,
   ]);
 
   const handleDirectionButton = (newDirection: Direction) => {
@@ -459,242 +498,268 @@ const GameBoard: React.FC = () => {
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="md:col-span-2">
-        <div className="relative">
-          <PixelatedContainer className="overflow-hidden relative" tabIndex={0}>
-            <div
-              className="relative"
-              style={{
-                width: `${GRID_SIZE * CELL_SIZE}px`,
-                height: `${GRID_SIZE * CELL_SIZE}px`,
-                margin: "0 auto",
-                background:
-                  "linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%)",
-                borderRadius: "8px",
-              }}
-              ref={boardRef}
-            >
+        <div className="game-container relative w-full h-full overflow-hidden">
+          <div
+            ref={boardRef}
+            className="relative bg-grid-pattern"
+            style={{
+              backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+            }}
+          >
+            {/* Add depth effect */}
+            <div className="absolute inset-0 z-0" 
+                 style={{
+                   boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.3)'
+                 }} />
+
+            {/* Add subtle scanlines */}
+            <div className="absolute inset-0 z-50 pointer-events-none"
+                 style={{
+                   backgroundImage: `repeating-linear-gradient(
+                     0deg,
+                     rgba(0, 0, 0, 0.1) 0px,
+                     rgba(0, 0, 0, 0.1) 1px,
+                     transparent 1px,
+                     transparent 3px
+                   )`
+                 }} />
+
+            {/* Add holographic snake trail effect */}
+            {snake.map((segment) => (
+              <div key={segment.id} className="absolute z-10" />
+            ))}
+
+            {!hint.length && <div className="absolute top-0 left-0 w-full h-full" 
+                 style={{
+                   backgroundImage: `
+                     linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                     linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
+                   `,
+                   backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                 }}
+            />}
+
+            {hint.length > 0 && (
+              <div className="absolute top-0 left-0 w-full h-full z-5">
+                {/* Add semi-transparent overlay */}
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
+                     style={{
+                       backgroundImage: `
+                         linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                         linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+                       `,
+                       backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                     }} />
+                
+                <svg
+                  width={gridSizeX * CELL_SIZE}
+                  height={gridSizeY * CELL_SIZE}
+                  className="absolute top-0 left-0"
+                >
+                  <path
+                    d={hint
+                      .map((pos, i) => {
+                        const x = pos.x * CELL_SIZE + CELL_SIZE / 2;
+                        const y = pos.y * CELL_SIZE + CELL_SIZE / 2;
+                        return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+                      })
+                      .join(" ")}
+                    stroke="hsl(var(--game-snake))"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="square"
+                    strokeDasharray="8 4"
+                    className="animate-dash"
+                  />
+                  {hint.map((pos, i) => (
+                    <circle
+                      key={i}
+                      cx={pos.x * CELL_SIZE + CELL_SIZE / 2}
+                      cy={pos.y * CELL_SIZE + CELL_SIZE / 2}
+                      r={i === 0 ? 6 : 4}
+                      fill={i === 0 ? "hsl(var(--game-snake))" : "hsl(var(--primary))"}
+                      stroke="var(--background)"
+                      strokeWidth="2"
+                    />
+                  ))}
+                  {hint.slice(1).map((pos, i) => (
+                    <text
+                      key={`text-${i}`}
+                      x={pos.x * CELL_SIZE + CELL_SIZE / 2 + 8}
+                      y={pos.y * CELL_SIZE + CELL_SIZE / 2 - 6}
+                      fontSize="12"
+                      fill="hsl(var(--game-snake))"
+                      className="font-pixel bg-background/80 px-1"
+                    >
+                      {i + 1}
+                    </text>
+                  ))}
+                </svg>
+              </div>
+            )}
+
+            {snake.map((segment, index) => (
               <div
-                className="absolute top-0 left-0 w-full h-full"
+                key={segment.id}
+                className="absolute transition-all duration-100 ease-linear"
                 style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)",
-                  backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
-                  boxShadow: "inset 0 0 30px rgba(0, 0, 0, 0.5)",
+                  width: `${CELL_SIZE}px`,
+                  height: `${CELL_SIZE}px`,
+                  left: `${segment.x * CELL_SIZE}px`,
+                  top: `${segment.y * CELL_SIZE}px`,
+                  background:
+                    index === 0
+                      ? "linear-gradient(135deg, #10B981 0%, #059669 100%)"
+                      : "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                  borderRadius: index === 0 ? "8px" : "6px",
+                  transform: index === 0 ? "scale(1.1)" : "scale(1)",
+                  boxShadow:
+                    index === 0
+                      ? "0 0 15px rgba(16, 185, 129, 0.5)"
+                      : "0 0 10px rgba(5, 150, 105, 0.3)",
+                  zIndex: snake.length - index,
                 }}
               />
+            ))}
 
-              {hint.length > 0 && (
-                <div className="absolute top-0 left-0 w-full h-full z-5">
-                  <svg
-                    width={GRID_SIZE * CELL_SIZE}
-                    height={GRID_SIZE * CELL_SIZE}
-                    className="absolute top-0 left-0"
-                  >
-                    <path
-                      d={hint
-                        .map((pos, i) => {
-                          const x = pos.x * CELL_SIZE + CELL_SIZE / 2;
-                          const y = pos.y * CELL_SIZE + CELL_SIZE / 2;
-                          return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-                        })
-                        .join(" ")}
-                      stroke="rgba(255, 255, 255, 0.3)"
-                      strokeWidth="2"
-                      strokeDasharray="5,5"
-                      fill="none"
-                    />
-                    {hint.map((pos, i) => (
-                      <circle
-                        key={i}
-                        cx={pos.x * CELL_SIZE + CELL_SIZE / 2}
-                        cy={pos.y * CELL_SIZE + CELL_SIZE / 2}
-                        r={i === 0 ? 4 : 3}
-                        fill={
-                          i === 0
-                            ? "rgba(255, 255, 255, 0.5)"
-                            : "rgba(255, 255, 255, 0.3)"
-                        }
-                      />
-                    ))}
-                    {hint.slice(1).map((pos, i) => (
-                      <text
-                        key={`text-${i}`}
-                        x={pos.x * CELL_SIZE + CELL_SIZE / 2 + 5}
-                        y={pos.y * CELL_SIZE + CELL_SIZE / 2 - 5}
-                        fontSize="10"
-                        fill="rgba(255, 255, 255, 0.8)"
-                        className="font-pixel"
-                      >
-                        {i + 1}
-                      </text>
-                    ))}
-                  </svg>
-                </div>
-              )}
+            {food.map((item) => (
+              <div
+                key={item.id}
+                className="absolute animate-pulse"
+                style={{
+                  width: `${CELL_SIZE}px`,
+                  height: `${CELL_SIZE}px`,
+                  left: `${item.position.x * CELL_SIZE}px`,
+                  top: `${item.position.y * CELL_SIZE}px`,
+                }}
+              />
+            ))}
 
-              {snake.map((segment, index) => (
-                <div
-                  key={segment.id}
-                  className="absolute transition-all duration-100 ease-linear"
-                  style={{
-                    width: `${CELL_SIZE}px`,
-                    height: `${CELL_SIZE}px`,
-                    left: `${segment.x * CELL_SIZE}px`,
-                    top: `${segment.y * CELL_SIZE}px`,
-                    background:
-                      index === 0
-                        ? "linear-gradient(135deg, #10B981 0%, #059669 100%)"
-                        : "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                    borderRadius: index === 0 ? "8px" : "6px",
-                    transform: index === 0 ? "scale(1.1)" : "scale(1)",
-                    boxShadow:
-                      index === 0
-                        ? "0 0 15px rgba(16, 185, 129, 0.5)"
-                        : "0 0 10px rgba(5, 150, 105, 0.3)",
-                    zIndex: snake.length - index,
-                  }}
-                />
-              ))}
+            {collectibles.map((item) => (
+              <div
+                key={item.id}
+                className="absolute animate-bounce"
+                style={{
+                  width: `${CELL_SIZE}px`,
+                  height: `${CELL_SIZE}px`,
+                  left: `${item.position.x * CELL_SIZE}px`,
+                  top: `${item.position.y * CELL_SIZE}px`,
+                  background:
+                    "linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)",
+                  borderRadius: "50%",
+                  boxShadow: "0 0 25px rgba(251, 191, 36, 0.7)",
+                  animation: "bounce 1s infinite",
+                }}
+              />
+            ))}
 
-              {food.map((item) => (
-                <div
-                  key={item.id}
-                  className="absolute animate-pulse"
-                  style={{
-                    width: `${CELL_SIZE}px`,
-                    height: `${CELL_SIZE}px`,
-                    left: `${item.position.x * CELL_SIZE}px`,
-                    top: `${item.position.y * CELL_SIZE}px`,
-                  }}
-                />
-              ))}
+            <Snake segments={snake} />
+            <Food food={food} collectibles={collectibles} />
 
-              {collectibles.map((item) => (
-                <div
-                  key={item.id}
-                  className="absolute animate-bounce"
-                  style={{
-                    width: `${CELL_SIZE}px`,
-                    height: `${CELL_SIZE}px`,
-                    left: `${item.position.x * CELL_SIZE}px`,
-                    top: `${item.position.y * CELL_SIZE}px`,
-                    background:
-                      "linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)",
-                    borderRadius: "50%",
-                    boxShadow: "0 0 25px rgba(251, 191, 36, 0.7)",
-                    animation: "bounce 1s infinite",
-                  }}
-                />
-              ))}
+            {gameState !== GameState.PLAYING && (
+              <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
+                {gameState === GameState.READY && (
+                  <div className="flex flex-col items-center text-center">
+                    <h2 className="font-pixel text-2xl text-white mb-2 animate-pulse">
+                      Snake Game
+                    </h2>
+                    <p className="font-pixel text-sm text-white/80 mb-6">
+                      Use arrow keys or touch controls to guide the snake.
+                      <br />
+                      Press &apos;H&apos; for path optimization.
+                    </p>
+                    <PixelButton
+                      onClick={startGame}
+                      size="lg"
+                      className="transform hover:scale-110 transition-transform duration-200"
+                    >
+                      Start Game
+                    </PixelButton>
+                  </div>
+                )}
 
-              <Snake segments={snake} />
-              <Food food={food} collectibles={collectibles} />
-
-              {gameState !== GameState.PLAYING && (
-                <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
-                  {gameState === GameState.READY && (
-                    <div className="flex flex-col items-center text-center">
-                      <h2 className="font-pixel text-2xl text-white mb-2 animate-pulse">
-                        Snake Game
-                      </h2>
-                      <p className="font-pixel text-sm text-white/80 mb-6">
-                        Use arrow keys or touch controls to guide the snake.
-                        <br />
-                        Press &apos;H&apos; for path optimization.
+                {gameState === GameState.GAME_OVER && (
+                  <div className="text-center animate-pixel-shake">
+                    <h2 className="font-pixel text-3xl text-red-500 mb-4 animate-pulse">
+                      Game Over
+                    </h2>
+                    <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
+                      <p className="font-pixel text-lg text-white mb-2">
+                        Final Score: {stats.score}
                       </p>
+                      {stats.score === stats.highScore && stats.score > 0 && (
+                        <p className="font-pixel text-lg text-yellow-500 animate-bounce">
+                          🏆 New High Score! 🏆
+                        </p>
+                      )}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <p className="text-gray-400 text-sm">Food Eaten</p>
+                          <p className="text-xl font-bold text-white">
+                            {stats.foodEaten}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Coins</p>
+                          <p className="text-xl font-bold text-yellow-400">
+                            {coins}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 justify-center">
                       <PixelButton
                         onClick={startGame}
-                        size="lg"
                         className="transform hover:scale-110 transition-transform duration-200"
                       >
-                        Start Game
+                        Play Again
                       </PixelButton>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {gameState === GameState.GAME_OVER && (
-                    <div className="text-center animate-pixel-shake">
-                      <h2 className="font-pixel text-3xl text-red-500 mb-4 animate-pulse">
-                        Game Over
-                      </h2>
-                      <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
-                        <p className="font-pixel text-lg text-white mb-2">
-                          Final Score: {stats.score}
+                {gameState === GameState.WIN && (
+                  <div className="text-center">
+                    <h2 className="font-pixel text-3xl text-green-500 mb-4 animate-pulse">
+                      Victory! 🎉
+                    </h2>
+                    <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
+                      <p className="font-pixel text-lg text-white mb-2">
+                        Final Score: {stats.score}
+                      </p>
+                      {stats.score === stats.highScore && (
+                        <p className="font-pixel text-lg text-yellow-500 animate-bounce">
+                          🏆 New High Score! 🏆
                         </p>
-                        {stats.score === stats.highScore && stats.score > 0 && (
-                          <p className="font-pixel text-lg text-yellow-500 animate-bounce">
-                            🏆 New High Score! 🏆
+                      )}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <p className="text-gray-400 text-sm">Food Eaten</p>
+                          <p className="text-xl font-bold text-white">
+                            {stats.foodEaten}
                           </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <div>
-                            <p className="text-gray-400 text-sm">Food Eaten</p>
-                            <p className="text-xl font-bold text-white">
-                              {stats.foodEaten}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Coins</p>
-                            <p className="text-xl font-bold text-yellow-400">
-                              {coins}
-                            </p>
-                          </div>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Coins</p>
+                          <p className="text-xl font-bold text-yellow-400">
+                            {coins}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex gap-4 justify-center">
-                        <PixelButton
-                          onClick={startGame}
-                          className="transform hover:scale-110 transition-transform duration-200"
-                        >
-                          Play Again
-                        </PixelButton>
-                      </div>
                     </div>
-                  )}
-
-                  {gameState === GameState.WIN && (
-                    <div className="text-center">
-                      <h2 className="font-pixel text-3xl text-green-500 mb-4 animate-pulse">
-                        Victory! 🎉
-                      </h2>
-                      <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
-                        <p className="font-pixel text-lg text-white mb-2">
-                          Final Score: {stats.score}
-                        </p>
-                        {stats.score === stats.highScore && (
-                          <p className="font-pixel text-lg text-yellow-500 animate-bounce">
-                            🏆 New High Score! 🏆
-                          </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <div>
-                            <p className="text-gray-400 text-sm">Food Eaten</p>
-                            <p className="text-xl font-bold text-white">
-                              {stats.foodEaten}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Coins</p>
-                            <p className="text-xl font-bold text-yellow-400">
-                              {coins}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-4 justify-center">
-                        <PixelButton
-                          onClick={startGame}
-                          className="transform hover:scale-110 transition-transform duration-200"
-                        >
-                          Play Again
-                        </PixelButton>
-                      </div>
+                    <div className="flex gap-4 justify-center">
+                      <PixelButton
+                        onClick={startGame}
+                        className="transform hover:scale-110 transition-transform duration-200"
+                      >
+                        Play Again
+                      </PixelButton>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </PixelatedContainer>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="mt-4">
             <PixelButton

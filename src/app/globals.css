@@ -249,6 +249,10 @@
       transform: translate(0);
     }
   }
+  @keyframes grid-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
 }
 
 @utility container {
@@ -403,7 +407,11 @@
   }
   
   .snake-gradient {
-    background: linear-gradient(90deg, hsl(142, 80%, 45%) 0%, hsl(142, 80%, 55%) 100%);
+    background: linear-gradient(
+      145deg,
+      hsl(var(--game-snake)) 0%,
+      hsl(var(--game-snake)/0.8) 100%
+    );
   }
   
   .shimmer-text {
@@ -427,26 +435,152 @@
   
   .game-container {
     position: relative;
-    overflow: hidden;
+    border: 2px solid var(--game-border);
   }
   
   .game-container::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      repeating-linear-gradient(
-        0deg,
-        rgba(20, 20, 20, 0.1),
-        rgba(20, 20, 20, 0.1) 2px,
-        transparent 2px,
-        transparent 4px
-      );
+    inset: 0;
     pointer-events: none;
-    z-index: 100;
-    opacity: 0.4;
+    z-index: 1;
   }
+}
+
+.animate-grid-pulse {
+  animation: grid-pulse 3s ease-in-out infinite;
+}
+
+@keyframes hueShift {
+  0% { filter: hue-rotate(0deg) contrast(200%); }
+  100% { filter: hue-rotate(360deg) contrast(200%); }
+}
+
+@keyframes crtFlicker {
+  0% { opacity: 0.9; }
+  50% { opacity: 1; }
+  100% { opacity: 0.9; }
+}
+
+@keyframes matrixScroll {
+  from { background-position: 0 -100%; }
+  to { background-position: 0 100%; }
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes hologramPulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.1); }
+}
+
+/* Add retro terminal text effect */
+.terminal-text {
+  text-shadow: 
+    0 0 10px #0ff,
+    0 0 20px #0ff,
+    0 0 30px #0ff;
+  animation: textGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+  from { text-shadow: 0 0 10px #0ff; }
+  to { text-shadow: 0 0 20px #0ff, 0 0 30px #0ff, 0 0 40px #0ff; }
+}
+
+/* Add new chromatic aberration effect */
+@keyframes chromatic {
+  0% { transform: translate(-0.5px, -0.5px); }
+  50% { transform: translate(0.5px, 0.5px); }
+  100% { transform: translate(-0.5px, -0.5px); }
+}
+
+/* Add pixelated text effect */
+.pixel-text-extreme {
+  text-shadow: 
+    2px 2px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000;
+  image-rendering: pixelated;
+}
+
+/* Add dithering pattern */
+.dither-pattern {
+  background-image: 
+    linear-gradient(45deg, 
+      rgba(0,0,0,0.3) 25%, 
+      transparent 25%,
+      transparent 75%, 
+      rgba(0,0,0,0.3) 75%),
+    linear-gradient(45deg, 
+      rgba(0,0,0,0.3) 25%, 
+      transparent 25%,
+      transparent 75%, 
+      rgba(0,0,0,0.3) 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 2px 2px;
+}
+
+/* Update snake appearance */
+.snake-segment {
+  background: linear-gradient(
+    145deg,
+    hsl(142, 80%, 50%) 0%,
+    hsl(142, 80%, 45%) 100%
+  );
+  border-radius: 3px;
+  box-shadow: 
+    0 0 10px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+/* Food styling */
+.food-item {
+  background: hsl(var(--game-food));
+  border-radius: 50%;
+  box-shadow: 
+    0 0 15px rgba(239, 68, 68, 0.3),
+    inset 0 2px 2px rgba(255, 255, 255, 0.1);
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Collectible styling */
+.collectible-item {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  animation: rotate-slow 8s linear infinite;
+}
+
+/* Minimal UI text */
+.pixel-ui-text {
+  text-shadow: 
+    1px 1px 0 rgba(0, 0, 0, 0.5),
+    -1px -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth animations */
+@keyframes ambient-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes color-shift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+@keyframes dash {
+  from { stroke-dashoffset: 20 }
+  to { stroke-dashoffset: 0 }
+}
+.animate-dash {
+  animation: dash 1s linear infinite;
 }

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FoodProps } from "@/components/game/utils/types";
 import { CELL_SIZE } from "@/components/game/utils/gameLogic";

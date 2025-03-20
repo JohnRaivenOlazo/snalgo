@@ -11,8 +11,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 // Constants
-export const GRID_SIZE = 20;
-export const CELL_SIZE = 20;
+export const GRID_SIZE = 23;
+export const CELL_SIZE = 23;
 export const INITIAL_SNAKE_LENGTH = 3;
 export const INITIAL_SPEED = 200;
 export const MAX_STOMACH_CAPACITY = 10;
@@ -102,7 +102,9 @@ export const createInitialSnake = (): SnakeSegment[] => {
 export const generateFood = (
   snake: SnakeSegment[],
   existingFood: FoodItem[] = [],
-  existingCollectibles: Collectible[] = []
+  existingCollectibles: Collectible[] = [],
+  gridWidth: number,
+  gridHeight: number
 ): FoodItem => {
   const occupiedPositions = [
     ...snake.map(segment => `${segment.x},${segment.y}`),
@@ -113,8 +115,8 @@ export const generateFood = (
   let position: Position;
   do {
     position = {
-      x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1, 
-      y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1, 
+      x: Math.floor(Math.random() * (gridWidth - 2)) + 1,
+      y: Math.floor(Math.random() * (gridHeight - 2)) + 1,
     };
   } while (occupiedPositions.includes(`${position.x},${position.y}`));
   
@@ -139,7 +141,9 @@ export const generateFood = (
 export const generateCollectible = (
   snake: SnakeSegment[],
   existingFood: FoodItem[] = [],
-  existingCollectibles: Collectible[] = []
+  existingCollectibles: Collectible[] = [],
+  gridWidth: number,
+  gridHeight: number
 ): Collectible => {
   const occupiedPositions = [
     ...snake.map(segment => `${segment.x},${segment.y}`),
@@ -150,8 +154,8 @@ export const generateCollectible = (
   let position: Position;
   do {
     position = {
-      x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
-      y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
+      x: Math.floor(Math.random() * (gridWidth - 2)) + 1,
+      y: Math.floor(Math.random() * (gridHeight - 2)) + 1,
     };
   } while (occupiedPositions.includes(`${position.x},${position.y}`));
   
@@ -175,16 +179,13 @@ export const generateCollectible = (
 };
 
 // Check if snake will hit wall - Fixed to properly detect boundaries
-export const willHitWall = (head: Position, direction: Direction): boolean => {
-  // First get the new position based on direction
+export const willHitWall = (head: Position, direction: Direction, gridSizeX: number, gridSizeY: number): boolean => {
   const newPosition = getNewHeadPosition(head, direction);
-  
-  // Check if the new position is outside the grid
   return (
-    newPosition.x < 0 || 
-    newPosition.x >= GRID_SIZE || 
-    newPosition.y < 0 || 
-    newPosition.y >= GRID_SIZE
+    newPosition.x < 0 ||
+    newPosition.x >= gridSizeX ||
+    newPosition.y < 0 ||
+    newPosition.y >= gridSizeY
   );
 };
 
