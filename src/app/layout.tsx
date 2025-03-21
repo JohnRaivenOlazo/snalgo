@@ -54,11 +54,11 @@ export default function RootLayout({
             unstyled: true,
             classNames: {
               toast: 
-                "flex flex-col items-center gap-2 p-4 border-2 border-game-border bg-game-bg text-white shadow-pixel",
-              title: "text-sm font-pixel text-game-green text-center",
+                "flex flex-col items-center gap-2 p-3 border border-game-border bg-game-bg text-white shadow-pixel",
+              title: "text-xs font-pixel text-game-green text-center",
               description: "text-xs font-pixel text-gray-300 text-center",
-              actionButton: "font-pixel px-2 py-1 border-2 border-game-green bg-game-bg hover:bg-game-green/20",
-              cancelButton: "font-pixel px-2 py-1 border-2 border-game-red bg-game-bg hover:bg-game-red/20",
+              actionButton: "font-pixel px-2 py-1 border border-game-green bg-game-bg hover:bg-game-green/20",
+              cancelButton: "font-pixel px-2 py-1 border border-game-red bg-game-bg hover:bg-game-red/20",
               success: "border-game-green",
               error: "border-game-red",
               warning: "border-game-yellow",
