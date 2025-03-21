@@ -207,7 +207,9 @@ const GameBoard: React.FC = () => {
 
   const gameOver = useCallback((message = "") => {
     setGameState(GameState.GAME_OVER);
-    toast.error(message || "Game Over!");
+    if(message){
+      toast.error(message);
+    }
 
     if (stats.score > stats.highScore) {
       localStorage.setItem("snakeHighScore", stats.score.toString());
