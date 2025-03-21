@@ -959,14 +959,6 @@ const GameBoard: React.FC = () => {
                         🏆 New High Score! 🏆
                       </p>
                     )}
-                    <div className="grid grid-cols-1 gap-4 mt-4">
-                      <div>
-                        <p className="text-gray-400 text-sm">Food Eaten</p>
-                        <p className="text-xl font-bold text-white">
-                          {stats.foodEaten}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                   <div className="flex gap-4 justify-center">
                     <PixelButton
