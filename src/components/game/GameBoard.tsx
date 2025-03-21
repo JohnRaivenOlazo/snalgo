@@ -49,8 +49,11 @@ import {
   Star,
   Trophy,
   Lightbulb,
+  RefreshCw,
 } from "lucide-react";
 import { useGameStore } from "@/stores/useGameStore";
+import { LeaderboardEntry, LeaderboardService } from "@/services/leaderboard";
+import { useSessionStore } from "@/stores/session";
 
 interface GameStats {
   score: number;
@@ -192,6 +195,10 @@ const GameBoard: React.FC = () => {
   }, [gridSizeX, gridSizeY]);
 
   const startGame = useCallback(() => {
+    if (!useSessionStore.getState().validateName()) {
+      return;
+    }
+    
     if (
       gameState === GameState.READY ||
       gameState === GameState.GAME_OVER ||
@@ -201,27 +208,38 @@ const GameBoard: React.FC = () => {
     }
 
     setGameState(GameState.PLAYING);
-
-    if (boardRef.current) {
-      boardRef.current.focus();
-    }
+    boardRef.current?.focus();
   }, [gameState, initGame]);
 
-  const gameOver = useCallback((message = "") => {
+  const gameOver = useCallback(async (message = "") => {
+    if (useSessionStore.getState().hasValidName) {
+      await LeaderboardService.submitScore(stats.score, stats.level);
+    }
     setGameState(GameState.GAME_OVER);
-    if(message){
+    if (message) {
       toast.error(message);
     }
 
-    if (stats.score > stats.highScore) {
-      localStorage.setItem("snakeHighScore", stats.score.toString());
-      setStats((prev) => ({
-        ...prev,
-        highScore: stats.score,
-      }));
-      toast.success("New high score: " + stats.score);
+    try {
+      // Submit score only if valid name exists
+      if (useSessionStore.getState().hasValidName) {
+        const success = await LeaderboardService.submitScore(stats.score, stats.level);
+        if (success) {
+          toast.success("Score submitted to leaderboard!");
+        }
+      }
+    } catch {
+      toast.error("Failed to submit score");
     }
-  }, [stats.score, stats.highScore]);
+
+    // Update high score logic
+    const currentHigh = Math.max(stats.highScore, stats.score);
+    if (stats.score > stats.highScore) {
+      localStorage.setItem("snakeHighScore", currentHigh.toString());
+      setStats(prev => ({ ...prev, highScore: currentHigh }));
+      toast.success(`New high score: ${currentHigh}`);
+    }
+  }, [stats.score, stats.highScore, stats.level]);
 
   const checkWinCondition = useCallback(() => {
     if (stats.score > stats.highScore) {
@@ -638,8 +656,74 @@ const GameBoard: React.FC = () => {
     }
   }, [gameState, snake.length, updateGameState, stats.level, generateNewLevel]);
 
+  // Add state for top scores
+  const [topScores, setTopScores] = useState<LeaderboardEntry[]>([]);
+
+  // Update the useEffect for leaderboard
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    
+    const loadLeaderboard = async () => {
+      try {
+        const scores = await LeaderboardService.getTopScores(5);
+        setTopScores(scores);
+      } catch {
+        // Silent fail for real-time updates
+      }
+    };
+
+    // Load immediately on component mount
+    loadLeaderboard();
+    
+    // Refresh every 10 seconds
+    intervalId = setInterval(loadLeaderboard, 10000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []); // Empty dependency array to run once on mount
+
+  // Move the hook call to the top level of the component
+  const guestName = useSessionStore((state) => state.guestName);
+
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="relative bg-black/20 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+        <div className="flex justify-between items-center mb-1">
+          <h3 className="font-pixel text-white/80 text-xs">TOP PLAYERS</h3>
+          <button 
+            onClick={() => {
+              LeaderboardService.getTopScores(5)
+                .then(setTopScores);
+            }}
+            className="text-white/60 hover:text-white/90 transition-colors"
+            title="Refresh leaderboard"
+          >
+            <RefreshCw className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="space-y-1">
+          {topScores.map((entry, index) => (
+            <div 
+              key={entry.id} 
+              className="flex justify-between items-center bg-gray-900/30 rounded-sm"
+            >
+              <span className="font-pixel text-white/70 text-xxs">#{index + 1}</span>
+              <span className=" text-white/90 text-xxs truncate max-w-[80px]">
+                {entry.username}
+              </span>
+              <div className="flex flex-col items-end">
+                <span className="font-pixel text-yellow-300/90 text-xxs">
+                  Lv.{entry.level}
+                </span>
+                <span className="font-pixel text-green-300/90 text-xxs">
+                  {entry.score.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       <div
         className="md:col-span-2 relative"
         style={{ height: "70vh", maxHeight: "800px" }}
@@ -815,6 +899,14 @@ const GameBoard: React.FC = () => {
             <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
               {gameState === GameState.READY && (
                 <div className="flex flex-col items-center text-center">
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    className="font-pixel mb-4 p-2 bg-black/50 text-white border-2 border-white/30 rounded-md focus:outline-none focus:border-primary"
+                    value={guestName}
+                    onChange={(e) => useSessionStore.getState().setGuestName(e.target.value)}
+                    maxLength={20}
+                  />
                   <p className="font-pixel text-sm text-white/80 mb-6">
                     Use arrow keys or touch controls to guide the snake.
                     <br />
