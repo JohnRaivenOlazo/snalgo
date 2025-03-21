@@ -729,11 +729,11 @@ const GameBoard: React.FC = () => {
                   {entry.username}
                 </span>
               </div>
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-center">
                 <span className="font-pixel text-yellow-300/90 text-[10px]">
                   Lv.{entry.level}
                 </span>
-                <span className="font-pixel text-green-300/90 text-xxs">
+                <span className="font-pixel text-green-300/90 text-[15px]">
                   {entry.score.toLocaleString()}
                 </span>
               </div>
@@ -874,17 +874,13 @@ const GameBoard: React.FC = () => {
               <div className="relative w-full h-full flex items-center justify-center">
                 {/* Main Collectible */}
                 <div
-                  className="w-[90%] h-[90%] rounded-lg border-2 border-white/40 
+                  className="w-[90%] h-[90%] rounded-lg  
                            shadow-pixel transform transition-all flex items-center justify-center
                            group-hover:scale-110 group-hover:brightness-110"
-                  style={{
-                    backgroundColor: collectible.color,
-                    boxShadow: `0 3px 0 ${collectible.color}80`,
-                  }}
                 >
                   {/* Value/Weight Badge */}
                   <div
-                    className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 
+                    className="absolute -bottom-[10px] left-1/2 -translate-x-1/2 
                                  bg-black/90 px-1.5 py-[3px] rounded-sm border 
                                  border-white/20 flex gap-1.5"
                   >
@@ -892,26 +888,13 @@ const GameBoard: React.FC = () => {
                       {collectible.value}
                     </span>
                     <span className="text-[8px] font-pixel text-white/80 leading-none">
-                      /
+                      |
                     </span>
                     <span className="text-[8px] font-pixel text-blue-300 leading-none">
                       {collectible.weight}
                     </span>
                   </div>
                 </div>
-
-                {/* Quantity Indicator */}
-                {collectible.quantity > 1 && (
-                  <div
-                    className="absolute -top-[6px] -right-[6px] bg-black/90 
-                                 rounded-full w-4 h-4 flex items-center justify-center 
-                                 border border-white/20 shadow-pixel"
-                  >
-                    <span className="text-[8px] font-pixel text-white leading-none">
-                      ×{collectible.quantity}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           ))}
