@@ -802,7 +802,7 @@ const GameBoard: React.FC = () => {
 
   // Updated mobile controls with haptic feedback and larger touch targets
   const MobileControls = () => (
-    <div className="md:hidden mt-6 fixed bottom-4 left-0 right-0 px-4">
+    <div className="md:hidden fixed bottom-4 left-0 right-0 px-4 z-[1000]">
       <div className="relative bg-black/30 backdrop-blur-lg rounded-2xl p-2 shadow-2xl">
         <div className="grid grid-cols-3 gap-2 items-center justify-center">
           <div className="col-start-2 flex justify-center">
