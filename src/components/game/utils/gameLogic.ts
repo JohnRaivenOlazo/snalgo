@@ -11,8 +11,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 // Constants
-export const GRID_SIZE = 23;
-export const CELL_SIZE = 23;
+export const GRID_SIZE = 30;
+export const CELL_SIZE = 30;
 export const INITIAL_SNAKE_LENGTH = 3;
 export const INITIAL_SPEED = 200;
 export const MAX_STOMACH_CAPACITY = 10;
@@ -81,16 +81,16 @@ export const COLLECTIBLE_PROPERTIES = {
 };
 
 // Helper to create initial snake
-export const createInitialSnake = (): SnakeSegment[] => {
-  const centerX = Math.floor(GRID_SIZE / 2);
-  const centerY = Math.floor(GRID_SIZE / 2);
+export const createInitialSnake = (gridWidth: number, gridHeight: number): SnakeSegment[] => {
+  const centerX = Math.floor(gridWidth / 2);
+  const centerY = Math.floor(gridHeight / 2);
   
   const snake: SnakeSegment[] = [];
   
   for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
     snake.push({
-      x: centerX - i,
-      y: centerY,
+      x: Math.min(Math.max(centerX - i, 0), gridWidth - 1),
+      y: Math.min(Math.max(centerY, 0), gridHeight - 1),
       id: uuidv4(),
     });
   }

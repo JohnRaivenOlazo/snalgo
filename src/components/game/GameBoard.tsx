@@ -94,37 +94,30 @@ const GameBoard: React.FC = () => {
   useEffect(() => {
     const updateGridSize = () => {
       if (boardRef.current?.parentElement) {
-        const { width } =
-          boardRef.current.parentElement.getBoundingClientRect();
+        const { width, height } = boardRef.current.parentElement.getBoundingClientRect();
+        
+        // Calculate grid dimensions based on CELL_SIZE
         const calculatedGridSizeX = Math.floor(width / CELL_SIZE);
-
-        // Set fixed height of 20 cells
-        const fixedGridSizeY = 20;
+        const calculatedGridSizeY = Math.floor(height / CELL_SIZE);
 
         setGridSizeX(calculatedGridSizeX);
-        setGridSizeY(fixedGridSizeY);
+        setGridSizeY(calculatedGridSizeY);
 
         if (boardRef.current) {
           boardRef.current.style.width = `${calculatedGridSizeX * CELL_SIZE}px`;
-          boardRef.current.style.height = `${fixedGridSizeY * CELL_SIZE}px`;
+          boardRef.current.style.height = `${calculatedGridSizeY * CELL_SIZE}px`;
         }
       }
     };
 
     // Initial calculation
     updateGridSize();
-
-    // Add resize observer
-    const resizeObserver = new ResizeObserver(updateGridSize);
-    if (boardRef.current?.parentElement) {
-      resizeObserver.observe(boardRef.current.parentElement);
-    }
-
-    return () => resizeObserver.disconnect();
+    window.addEventListener('resize', updateGridSize);
+    return () => window.removeEventListener('resize', updateGridSize);
   }, []);
 
   const initGame = useCallback(() => {
-    const initialSnake = createInitialSnake();
+    const initialSnake = createInitialSnake(gridSizeX, gridSizeY);
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
 
