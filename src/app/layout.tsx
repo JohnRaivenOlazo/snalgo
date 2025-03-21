@@ -40,7 +40,33 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
-        <Toaster />
+        <Toaster
+          position="top-center"
+          theme="dark"
+          className="[--toast-font:var(--font-pixel)]"
+          toastOptions={{
+            className: "font-pixel",
+            style: {
+              border: '2px solid #00ff00',
+              background: '#0a160f',
+              color: '#ffffff',
+            },
+            unstyled: true,
+            classNames: {
+              toast: 
+                "flex flex-col items-center gap-2 p-4 border-2 border-game-border bg-game-bg text-white shadow-pixel",
+              title: "text-sm font-pixel text-game-green text-center",
+              description: "text-xs font-pixel text-gray-300 text-center",
+              actionButton: "font-pixel px-2 py-1 border-2 border-game-green bg-game-bg hover:bg-game-green/20",
+              cancelButton: "font-pixel px-2 py-1 border-2 border-game-red bg-game-bg hover:bg-game-red/20",
+              success: "border-game-green",
+              error: "border-game-red",
+              warning: "border-game-yellow",
+              info: "border-game-blue",
+              closeButton: "text-game-green hover:bg-game-green/10",
+            }
+          }}
+        />
       </body>
     </html>
   );

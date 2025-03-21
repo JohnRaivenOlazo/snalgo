@@ -10,14 +10,26 @@ import {
 } from "@/components/game/utils/types";
 import { v4 as uuidv4 } from 'uuid';
 
+// Add level-based difficulty factors
+export const LEVEL_SPEED_INCREASE = 15;  // % speed increase per level
+export const LEVEL_THRESHOLD_INCREASE = 1;  // Food required per level
+export const BASE_COLLECTIBLE_WEIGHT = 2;  // Base weight multiplier
+
+// Add weight threshold constants
+export const BASE_WEIGHT_THRESHOLD = 10;
+export const WEIGHT_THRESHOLD_INCREMENT = 5;
+export const BASE_FOOD_REQUIREMENT = 3;
+export const FOOD_INCREMENT_PER_LEVEL = 1;
+export const COLLECTIBLES_PER_LEVEL = 3;
+
 // Constants
 export const GRID_SIZE = 30;
 export const CELL_SIZE = 30;
 export const INITIAL_SNAKE_LENGTH = 3;
 export const INITIAL_SPEED = 200;
-export const MAX_STOMACH_CAPACITY = 10;
+export const MAX_STOMACH_CAPACITY = BASE_WEIGHT_THRESHOLD;
 export const MAX_FOOD_ITEMS = 3;
-export const MAX_COLLECTIBLES = 1;
+export const MAX_COLLECTIBLES = 3;
 export const COLLECTIBLE_THRESHOLD = 3;
 
 // Food colors
@@ -47,6 +59,7 @@ export const FOOD_PROPERTIES = {
 // Collectible properties - adjusted for beginners
 export const COLLECTIBLE_PROPERTIES = {
   [CollectibleType.CRYSTAL]: { 
+    name: 'Crystal',
     minValue: 2,
     maxValue: 5,
     minWeight: 1,
@@ -55,6 +68,7 @@ export const COLLECTIBLE_PROPERTIES = {
     maxSellValue: 3
   },
   [CollectibleType.GEM]: { 
+    name: 'Gem',
     minValue: 5, 
     maxValue: 10, 
     minWeight: 3, 
@@ -63,6 +77,7 @@ export const COLLECTIBLE_PROPERTIES = {
     maxSellValue: 5 
   },
   [CollectibleType.POTION]: { 
+    name: 'Potion',
     minValue: 8, 
     maxValue: 12, 
     minWeight: 5, 
@@ -71,6 +86,7 @@ export const COLLECTIBLE_PROPERTIES = {
     maxSellValue: 8 
   },
   [CollectibleType.ARTIFACT]: { 
+    name: 'Artifact',
     minValue: 12, 
     maxValue: 15, 
     minWeight: 8, 
@@ -108,8 +124,8 @@ export const generateFood = (
 ): FoodItem => {
   const occupiedPositions = [
     ...snake.map(segment => `${segment.x},${segment.y}`),
-    ...existingFood.map(food => `${food.position.x},${food.position.y}`),
-    ...existingCollectibles.map(collectible => `${collectible.position.x},${collectible.position.y}`)
+    ...existingFood.map(f => `${f.position.x},${f.position.y}`),
+    ...existingCollectibles.map(c => `${c.position.x},${c.position.y}`)
   ];
   
   let position: Position;
@@ -143,39 +159,75 @@ export const generateCollectible = (
   existingFood: FoodItem[] = [],
   existingCollectibles: Collectible[] = [],
   gridWidth: number,
-  gridHeight: number
+  gridHeight: number,
+  level: number = 1
 ): Collectible => {
   const occupiedPositions = [
     ...snake.map(segment => `${segment.x},${segment.y}`),
-    ...existingFood.map(food => `${food.position.x},${food.position.y}`),
-    ...existingCollectibles.map(collectible => `${collectible.position.x},${collectible.position.y}`)
+    ...existingFood.map(f => `${f.position.x},${f.position.y}`),
+    ...existingCollectibles.map(c => `${c.position.x},${c.position.y}`)
   ];
-  
+
   let position: Position;
   do {
     position = {
       x: Math.floor(Math.random() * (gridWidth - 2)) + 1,
-      y: Math.floor(Math.random() * (gridHeight - 2)) + 1,
+      y: Math.floor(Math.random() * (gridHeight - 2)) + 1
     };
   } while (occupiedPositions.includes(`${position.x},${position.y}`));
-  
-  const collectibleTypes = Object.values(CollectibleType);
-  const type = collectibleTypes[Math.floor(Math.random() * collectibleTypes.length)];
+
+  const typeWeights = {
+    [CollectibleType.CRYSTAL]: Math.max(0.5 - level * 0.02, 0.1),
+    [CollectibleType.GEM]: 0.7 + level * 0.05,
+    [CollectibleType.POTION]: 1.2 + level * 0.1,
+    [CollectibleType.ARTIFACT]: 0.9 + level * 0.15
+  };
+
+  const type = weightedRandom(CollectibleType, typeWeights);
   const props = COLLECTIBLE_PROPERTIES[type];
   
-  const value = Math.floor(Math.random() * (props.maxValue - props.minValue + 1)) + props.minValue;
-  const weight = Math.floor(Math.random() * (props.maxWeight - props.minWeight + 1)) + props.minWeight;
-  const sellValue = Math.floor(Math.random() * (props.maxSellValue - props.minSellValue + 1)) + props.minSellValue;
+  // Value increases exponentially with level
+  const valueMultiplier = 1 + Math.pow(level, 1.2) * 0.15;
+  const weightMultiplier = 1 + Math.pow(level, 1.1) * 0.1;
   
+  const quantity = Math.floor(1 + Math.random() * (2 + Math.floor(level/3)));
+  const value = Math.floor(
+    (props.minValue + Math.random() * (props.maxValue - props.minValue)) *
+    valueMultiplier *
+    quantity
+  );
+  
+  const weight = Math.floor(
+    (props.minWeight + Math.random() * (props.maxWeight - props.minWeight)) *
+    weightMultiplier *
+    quantity
+  );
+
   return {
     id: uuidv4(),
     position,
     value,
-    sellValue,
+    sellValue: Math.floor(value * (0.5 + Math.random() * 0.3)),
     weight,
     type,
     color: COLLECTIBLE_COLORS[type],
+    quantity,
   };
+};
+
+// Helper function for weighted random selection
+const weightedRandom = (types: typeof CollectibleType, weights: Record<CollectibleType, number>) => {
+  const total = Object.values(weights).reduce((sum, w) => sum + w, 0);
+  const random = Math.random() * total;
+  
+  let current = 0;
+  for (const [type, weight] of Object.entries(weights)) {
+    current += weight;
+    if (random < current) {
+      return type as CollectibleType;
+    }
+  }
+  return CollectibleType.CRYSTAL;
 };
 
 // Check if snake will hit wall - Fixed to properly detect boundaries
@@ -246,9 +298,10 @@ export const getNewHeadPosition = (
 };
 
 // Calculate speed based on snake length
-export const calculateSpeed = (snakeLength: number): number => {
-  const speed = INITIAL_SPEED - Math.floor(snakeLength / 3) * 3;
-  return Math.max(speed, 120);
+export const calculateSpeed = (snakeLength: number, level: number): number => {
+  const baseSpeed = INITIAL_SPEED - Math.floor(snakeLength / 3) * 3;
+  const levelPenalty = baseSpeed * (LEVEL_SPEED_INCREASE / 100) * (level - 1);
+  return Math.max(baseSpeed - levelPenalty, 120);
 };
 
 // Sort inventory items
@@ -297,4 +350,32 @@ export const getOppositeDirection = (direction: Direction): Direction => {
     default:
       return direction;
   }
+};
+
+// Calculate score based on collected items (knapsack value)
+export const calculateScore = (inventory: InventoryItem[], level: number): number => {
+  const threshold = BASE_WEIGHT_THRESHOLD + (level - 1) * WEIGHT_THRESHOLD_INCREMENT;
+  const totalWeight = inventory.reduce((sum, item) => sum + item.weight, 0);
+  
+  if (totalWeight > threshold) {
+    return -1; // Indicate game over
+  }
+  
+  return inventory.reduce((sum, item) => sum + item.value, 0);
+};
+
+// Get displayed snake length (subtract initial length)
+export const getDisplayedSnakeLength = (snake: SnakeSegment[]): number => {
+  return Math.max(snake.length - INITIAL_SNAKE_LENGTH, 0);
+};
+
+// Optimized score calculation using knapsack algorithm
+export const calculateOptimalScore = (items: Collectible[], capacity: number): number => {
+  const dp = Array(capacity + 1).fill(0);
+  for (const item of items) {
+    for (let w = capacity; w >= item.weight; w--) {
+      dp[w] = Math.max(dp[w], dp[w - item.weight] + item.value);
+    }
+  }
+  return dp[capacity];
 };

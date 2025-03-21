@@ -15,6 +15,7 @@ import {
   Star,
   Zap,
   Package,
+  Lightbulb,
 } from "lucide-react";
 import {
   bubbleSort,
@@ -24,10 +25,19 @@ import {
 } from "@/components/game/utils/algorithms";
 import { useGameStore } from "@/stores/useGameStore";
 
+interface InventoryProps {
+  items: InventoryItem[];
+  capacity: number;
+  currentWeight: number;
+  totalValue: number;
+  onDeleteItem: (itemId: string) => void;
+}
+
 const Inventory: React.FC<InventoryProps> = ({
   items,
   currentWeight,
   onDeleteItem,
+  totalValue,
 }) => {
   const { capacity } = useGameStore();
 
@@ -229,6 +239,16 @@ const Inventory: React.FC<InventoryProps> = ({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/20">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="text-green-400" size={16} />
+          <span className="font-pixel text-sm text-white">Total Value</span>
+        </div>
+        <span className="font-pixel text-lg text-green-400">
+          {totalValue}
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto mt-2 relative">

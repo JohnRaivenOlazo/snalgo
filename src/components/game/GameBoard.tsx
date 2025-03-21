@@ -12,7 +12,6 @@ import {
   GameState,
   InventoryItem,
   Position,
-  GameStats,
   Collectible,
   CollectibleType,
 } from "@/components/game/utils/types";
@@ -36,8 +35,10 @@ import {
   collectibleToInventoryItem,
   getOppositeDirection,
   MAX_FOOD_ITEMS,
-  MAX_COLLECTIBLES,
-  COLLECTIBLE_THRESHOLD,
+  BASE_WEIGHT_THRESHOLD,
+  WEIGHT_THRESHOLD_INCREMENT,
+  BASE_FOOD_REQUIREMENT,
+  calculateOptimalScore,
 } from "@/components/game/utils/gameLogic";
 import { tspNearestNeighbor } from "@/components/game/utils/algorithms";
 import {
@@ -51,13 +52,23 @@ import {
 } from "lucide-react";
 import { useGameStore } from "@/stores/useGameStore";
 
+interface GameStats {
+  score: number;
+  highScore: number;
+  foodEaten: number;
+  collectiblesCollected: number;
+  inventoryCapacity: number;
+  inventoryCurrentWeight: number;
+  level: number;
+  totalValue: number;
+  totalWeight: number;
+}
+
 const GameBoard: React.FC = () => {
   const [snake, setSnake] = useState<SnakeSegment[]>([]);
   const [direction, setDirection] = useState<Direction>(Direction.RIGHT);
   const [food, setFood] = useState<FoodItem[]>([]);
   const [collectibles, setCollectibles] = useState<Collectible[]>([]);
-  const [foodEatenSinceLastCollectible, setFoodEatenSinceLastCollectible] =
-    useState<number>(0);
   const [gameState, setGameState] = useState<GameState>(GameState.READY);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [hint, setHint] = useState<Position[]>([]);
@@ -65,10 +76,12 @@ const GameBoard: React.FC = () => {
     score: 0,
     highScore: 0,
     foodEaten: 0,
-    coinsCollected: 0,
+    collectiblesCollected: 0,
     inventoryCapacity: 0,
     inventoryCurrentWeight: 0,
     level: 1,
+    totalValue: 0,
+    totalWeight: 0,
   });
 
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
@@ -93,12 +106,13 @@ const GameBoard: React.FC = () => {
 
   const updateGridSize = useCallback(() => {
     if (!boardRef.current?.parentElement) return;
-    
-    const { width, height } = boardRef.current.parentElement.getBoundingClientRect();
+
+    const { width, height } =
+      boardRef.current.parentElement.getBoundingClientRect();
     // Add maximum bounds and aspect ratio constraint
     const maxWidth = Math.min(width, window.innerWidth * 0.8);
     const maxHeight = Math.min(height, window.innerHeight * 0.7);
-    
+
     const newGridX = Math.floor(maxWidth / CELL_SIZE);
     const newGridY = Math.floor(maxHeight / CELL_SIZE);
 
@@ -117,19 +131,19 @@ const GameBoard: React.FC = () => {
 
     const initTimeout = setTimeout(() => {
       updateGridSize();
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
     }, 50);
 
     return () => {
       clearTimeout(initTimeout);
       clearTimeout(resizeTimeout);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [updateGridSize]);
 
   const initGame = useCallback(() => {
     if (gridSizeX < 10 || gridSizeY < 10) return;
-    
+
     const initialSnake = createInitialSnake(gridSizeX, gridSizeY);
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
@@ -142,18 +156,23 @@ const GameBoard: React.FC = () => {
     }
     setFood(initialFood);
 
-    const initialCollectible = generateCollectible(
-      initialSnake,
-      initialFood,
-      [],
-      gridSizeX,
-      gridSizeY
-    );
-    setCollectibles([initialCollectible]);
-    setFoodEatenSinceLastCollectible(0);
+    const initialCollectibles: Collectible[] = [];
+    for (let i = 0; i < 3; i++) {
+      initialCollectibles.push(
+        generateCollectible(
+          initialSnake,
+          initialFood,
+          initialCollectibles,
+          gridSizeX,
+          gridSizeY
+        )
+      );
+    }
+    setCollectibles(initialCollectibles);
     setGameState(GameState.READY);
     setHint([]);
     hintActiveRef.current = false;
+    setInventory([]);
     setStats((prev) => ({
       ...prev,
       score: 0,
@@ -161,8 +180,12 @@ const GameBoard: React.FC = () => {
         ? parseInt(localStorage.getItem("snakeHighScore") || "0")
         : 0,
       foodEaten: 0,
-      inventoryCurrentWeight: prev.inventoryCurrentWeight,
+      collectiblesCollected: 0,
+      inventoryCapacity: useGameStore.getState().capacity,
+      inventoryCurrentWeight: 0,
       level: 1,
+      totalValue: 0,
+      totalWeight: 0,
     }));
   }, [gridSizeX, gridSizeY]);
 
@@ -182,8 +205,9 @@ const GameBoard: React.FC = () => {
     }
   }, [gameState, initGame]);
 
-  const gameOver = useCallback(() => {
+  const gameOver = useCallback((message = "") => {
     setGameState(GameState.GAME_OVER);
+    toast.error(message || "Game Over!");
 
     if (stats.score > stats.highScore) {
       localStorage.setItem("snakeHighScore", stats.score.toString());
@@ -235,6 +259,47 @@ const GameBoard: React.FC = () => {
     [addCoins]
   );
 
+  const generateNewLevel = useCallback(() => {
+    const newFood: FoodItem[] = [];
+    const newCollectibles: Collectible[] = [];
+    
+    // Generate food based on level
+    for (let i = 0; i < BASE_FOOD_REQUIREMENT + stats.level; i++) {
+      newFood.push(generateFood(
+        snake,
+        newFood,
+        newCollectibles,
+        gridSizeX,
+        gridSizeY
+      ));
+    }
+    
+    // Generate collectibles - 5 base + 3 per level (capped at 15)
+    const collectibleCount = 5 + Math.min(stats.level * 3, 10);
+    for (let i = 0; i < collectibleCount; i++) {
+      newCollectibles.push(
+        generateCollectible(
+          snake,
+          newFood,
+          newCollectibles,
+          gridSizeX,
+          gridSizeY,
+          stats.level
+        )
+      );
+    }
+    
+    setFood(newFood);
+    setCollectibles(newCollectibles);
+    setStats(prev => ({
+      ...prev,
+      totalValue: 0,
+      totalWeight: 0,
+      inventoryCurrentWeight: 0
+    }));
+    setInventory([]);
+  }, [stats.level, gridSizeX, gridSizeY, snake]);
+  
   const updateHintPath = useCallback(
     (head: Position) => {
       if (
@@ -258,6 +323,43 @@ const GameBoard: React.FC = () => {
 
   const updateGameState = useCallback(() => {
     if (gameState !== GameState.PLAYING) return;
+
+    // Calculate current level's capacity threshold
+    const currentThreshold = BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
+    const totalWeight = inventory.reduce((sum, item) => sum + item.weight, 0);
+
+    // Immediate weight check before processing movement
+    if (totalWeight > currentThreshold) {
+      gameOver(`Capacity exceeded! (${totalWeight}/${currentThreshold})`);
+      return;
+    }
+
+    // Level completion (only require food to be eaten)
+    if (food.length === 0) {
+      const optimalScore = calculateOptimalScore(
+        collectibles,
+        currentThreshold
+      );
+
+      // Get player's actual efficiency
+      const playerEfficiency = stats.score / optimalScore;
+
+      if (playerEfficiency >= 0.6) {
+        // Success - progress to next level
+        setStats(prev => ({
+          ...prev,
+          level: prev.level + 1,
+          score: prev.score + Math.floor(prev.totalValue * 0.2), // Add 20% bonus
+          totalValue: 0,
+          totalWeight: 0,
+          inventoryCurrentWeight: 0
+        }));
+        generateNewLevel();
+      } else {
+        // Failure - show precise efficiency
+        gameOver(`Efficiency ${(playerEfficiency * 100).toFixed(1)}% (Need 60%+)`);
+      }
+    }
 
     // Process direction queue
     let newDirection = directionRef.current;
@@ -310,48 +412,22 @@ const GameBoard: React.FC = () => {
       // Remove the eaten food
       const newFood = food.filter((f) => f.id !== eatenFood.id);
 
-      // Update score only for food items
-      setStats((prev) => ({
-        ...prev,
-        score: prev.score + eatenFood.value,
-        foodEaten: prev.foodEaten + 1,
-      }));
-
-      const newFoodEatenCount = foodEatenSinceLastCollectible + 1;
-      setFoodEatenSinceLastCollectible(newFoodEatenCount);
-
-      // Create a collectible after threshold is reached, if one doesn't exist
-      if (
-        newFoodEatenCount >= COLLECTIBLE_THRESHOLD &&
-        collectibles.length < MAX_COLLECTIBLES
-      ) {
-        const newCollectible = generateCollectible(
-          newSnake,
-          newFood,
-          collectibles,
-          gridSizeX,
-          gridSizeY
-        );
-        setCollectibles((prev) => [...prev, newCollectible]);
-        setFoodEatenSinceLastCollectible(0);
-        toast.info("Collectible spawned!");
-      }
-
       // Only generate new food if all food is eaten AND all collectibles are eaten
       if (newFood.length === 0 && collectibles.length === 0) {
-        const additionalFood: React.SetStateAction<FoodItem[]> | undefined = [];
-        for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
-          additionalFood.push(
-            generateFood(
+        const foodToGenerate = BASE_FOOD_REQUIREMENT + stats.level;
+        if (foodToGenerate > 0) {
+          const additionalFood = [];
+          for (let i = 0; i < foodToGenerate; i++) {
+            additionalFood.push(generateFood(
               newSnake,
-              additionalFood,
-              collectibles,
+              [],
+              collectibles, // Keep existing collectibles
               gridSizeX,
               gridSizeY
-            )
-          );
+            ));
+          }
+          setFood(additionalFood);
         }
-        setFood(additionalFood);
       } else {
         setFood(newFood);
       }
@@ -369,18 +445,33 @@ const GameBoard: React.FC = () => {
     }
 
     if (eatenCollectible) {
+      const newWeight = currentWeightRef.current + eatenCollectible.weight;
+      const currentThreshold = BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
+
+      if (newWeight > currentThreshold) {
+        gameOver(`Capacity exceeded! (${newWeight}/${currentThreshold})`);
+        return;
+      }
+
+      setStats((prev) => ({
+        ...prev,
+        collectiblesCollected: prev.collectiblesCollected + 1,
+        inventoryCurrentWeight: newWeight,
+        totalValue: prev.totalValue + eatenCollectible.value,
+        score: prev.score + eatenCollectible.value,
+        totalWeight: prev.totalWeight + eatenCollectible.weight
+      }));
+
       const newCollectibles = collectibles.filter(
         (c) => c.id !== eatenCollectible.id
       );
-      const currentCapacity = useGameStore.getState().capacity;
-      const totalWeight = currentWeightRef.current + eatenCollectible.weight;
 
-      if (totalWeight <= currentCapacity) {
+      if (newWeight <= currentThreshold) {
         setInventory((prev) => [
           ...prev,
           collectibleToInventoryItem(eatenCollectible),
         ]);
-        setStats((prev) => ({ ...prev, inventoryCurrentWeight: totalWeight }));
+        setStats((prev) => ({ ...prev, inventoryCurrentWeight: newWeight }));
       } else {
         toast.error("Inventory full! Collectible not stored.");
       }
@@ -389,13 +480,20 @@ const GameBoard: React.FC = () => {
 
       // Generate new food if all food and collectibles are eaten
       if (food.length === 0 && newCollectibles.length === 0) {
-        const additionalFood = [];
-        for (let i = 0; i < MAX_FOOD_ITEMS; i++) {
-          additionalFood.push(
-            generateFood(newSnake, [], [], gridSizeX, gridSizeY)
-          );
+        const foodToGenerate = BASE_FOOD_REQUIREMENT + stats.level;
+        if (foodToGenerate > 0) {
+          const additionalFood = [];
+          for (let i = 0; i < foodToGenerate; i++) {
+            additionalFood.push(generateFood(
+              newSnake,
+              [],
+              [], // No collectibles for new food
+              gridSizeX,
+              gridSizeY
+            ));
+          }
+          setFood(additionalFood);
         }
-        setFood(additionalFood);
       }
 
       // Don't reset the hint path or hintActiveRef if the hint is active
@@ -414,18 +512,10 @@ const GameBoard: React.FC = () => {
     if (hintActiveRef.current && (food.length > 0 || collectibles.length > 0)) {
       updateHintPath(newSnake[0]);
     }
-  }, [
-    gameState,
-    snake,
-    food,
-    collectibles,
-    foodEatenSinceLastCollectible,
-    gameOver,
-    checkWinCondition,
-    updateHintPath,
-    gridSizeX,
-    gridSizeY,
-  ]);
+
+    // Update speed based on level
+    calculateSpeed(snake.length, stats.level);
+  }, [gameState, stats.level, stats.score, food, inventory, snake, gridSizeX, gridSizeY, collectibles, gameOver, generateNewLevel, checkWinCondition, updateHintPath]);
 
   const handleDirectionButton = (newDirection: Direction) => {
     const currentDirection = directionRef.current;
@@ -511,30 +601,44 @@ const GameBoard: React.FC = () => {
         clearInterval(gameLoopRef.current);
       }
 
-      const speed = calculateSpeed(snake.length);
-
+      const speed = calculateSpeed(snake.length, stats.level);
       gameLoopRef.current = setInterval(updateGameState, speed);
-    } else {
-      if (gameLoopRef.current) {
-        clearInterval(gameLoopRef.current);
-        gameLoopRef.current = null;
-      }
-    }
 
-    return () => {
-      if (gameLoopRef.current) {
-        clearInterval(gameLoopRef.current);
-      }
-    };
-  }, [gameState, snake.length, updateGameState]);
+      return () => {
+        if (gameLoopRef.current) {
+          clearInterval(gameLoopRef.current);
+        }
+      };
+    }
+  }, [gameState, snake.length, updateGameState, stats.level]);
 
   useEffect(() => {
     initGame();
   }, [initGame]);
 
+  useEffect(() => {
+    if (gameState === GameState.PLAYING) {
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+      }
+
+      const speed = calculateSpeed(snake.length, stats.level);
+      gameLoopRef.current = setInterval(updateGameState, speed);
+
+      return () => {
+        if (gameLoopRef.current) {
+          clearInterval(gameLoopRef.current);
+        }
+      };
+    }
+  }, [gameState, snake.length, updateGameState, stats.level, generateNewLevel]);
+
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="md:col-span-2 relative" style={{ height: '70vh', maxHeight: '800px' }}>
+      <div
+        className="md:col-span-2 relative"
+        style={{ height: "70vh", maxHeight: "800px" }}
+      >
         <div
           ref={boardRef}
           className="relative bg-grid-pattern mx-auto"
@@ -625,9 +729,7 @@ const GameBoard: React.FC = () => {
                     cy={pos.y * CELL_SIZE + CELL_SIZE / 2}
                     r={i === 0 ? 6 : 4}
                     fill={
-                      i === 0
-                        ? "hsl(var(--game-snake))"
-                        : "hsl(var(--primary))"
+                      i === 0 ? "hsl(var(--game-snake))" : "hsl(var(--primary))"
                     }
                     stroke="var(--background)"
                     strokeWidth="2"
@@ -652,13 +754,62 @@ const GameBoard: React.FC = () => {
           <Snake segments={snake} />
           <Food food={food} collectibles={collectibles} />
 
+          {collectibles.map((collectible) => (
+            <div
+              key={collectible.id}
+              className="absolute z-30 group"
+              style={{
+                left: `${collectible.position.x * CELL_SIZE}px`,
+                top: `${collectible.position.y * CELL_SIZE}px`,
+                width: `${CELL_SIZE}px`,
+                height: `${CELL_SIZE}px`,
+              }}
+            >
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Main Collectible */}
+                <div
+                  className="w-[90%] h-[90%] rounded-lg border-2 border-white/40 
+                           shadow-pixel transform transition-all flex items-center justify-center
+                           group-hover:scale-110 group-hover:brightness-110"
+                  style={{
+                    backgroundColor: collectible.color,
+                    boxShadow: `0 3px 0 ${collectible.color}80`,
+                  }}
+                >
+                  {/* Value/Weight Badge */}
+                  <div className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 
+                                 bg-black/90 px-1.5 py-[3px] rounded-sm border 
+                                 border-white/20 flex gap-1.5">
+                    <span className="text-[8px] font-pixel text-yellow-300 leading-none">
+                      {collectible.value}
+                    </span>
+                    <span className="text-[8px] font-pixel text-white/80 leading-none">
+                      /
+                    </span>
+                    <span className="text-[8px] font-pixel text-blue-300 leading-none">
+                      {collectible.weight}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quantity Indicator */}
+                {collectible.quantity > 1 && (
+                  <div className="absolute -top-[6px] -right-[6px] bg-black/90 
+                                 rounded-full w-4 h-4 flex items-center justify-center 
+                                 border border-white/20 shadow-pixel">
+                    <span className="text-[8px] font-pixel text-white leading-none">
+                      ×{collectible.quantity}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
           {gameState !== GameState.PLAYING && (
             <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
               {gameState === GameState.READY && (
                 <div className="flex flex-col items-center text-center">
-                  <h2 className="font-pixel text-2xl text-white mb-2 animate-pulse">
-                    Snake Game
-                  </h2>
                   <p className="font-pixel text-sm text-white/80 mb-6">
                     Use arrow keys or touch controls to guide the snake.
                     <br />
@@ -831,13 +982,6 @@ const GameBoard: React.FC = () => {
               </span>
             </div>
           </div>
-
-          <div className="flex text-center justify-center mt-2 text-[8px] font-pixel text-muted-foreground">
-            <p>
-              Food eaten: {foodEatenSinceLastCollectible}/
-              {COLLECTIBLE_THRESHOLD} until next collectible
-            </p>
-          </div>
         </PixelatedContainer>
 
         <Inventory
@@ -852,8 +996,34 @@ const GameBoard: React.FC = () => {
           )}
           capacity={useGameStore.getState().capacity}
           currentWeight={stats.inventoryCurrentWeight}
+          totalValue={stats.totalValue}
           onDeleteItem={handleDeleteInventoryItem}
         />
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <p className="text-gray-400 text-sm">Level</p>
+            <p className="text-xl font-bold text-white">{stats.level}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm">Snake Length</p>
+            <p className="text-xl font-bold text-white">
+              {Math.max(snake.length - 3, 0)}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm">Collectibles</p>
+            <p className="text-xl font-bold text-white">
+              {stats.collectiblesCollected}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm">Total Weight</p>
+            <p className="text-xl font-bold text-yellow-400">
+              {stats.totalWeight}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

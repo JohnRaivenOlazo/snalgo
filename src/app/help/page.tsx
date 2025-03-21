@@ -1,63 +1,67 @@
 'use client'
 import React from 'react';
-import { ArrowRight, Keyboard, Trophy, Lightbulb, Star } from 'lucide-react';
+import { Keyboard, List, Target, Gem, Zap, Sparkles } from 'lucide-react';
 
 const HelpPage = () => {
   const sections = [
     {
-      title: 'How to Play',
+      title: 'Objectives & Rules',
+      icon: Target,
+      content: [
+        '★ Collect food to grow your snake',
+        '★ Gather collectibles without exceeding weight limit',
+        '★ Reach 60%+ of level\'s optimal value to progress',
+        '★ Manage inventory to maximize score',
+        '★ Avoid walls and self-collisions'
+      ],
+    },
+    {
+      title: 'Key Controls',
       icon: Keyboard,
       content: [
-        'Use arrow keys to control the snake',
-        'Collect food to grow longer and earn points',
-        'Collect special items to store in your inventory',
-        'Press Space to pause/resume the game',
-        'Press H to get a hint for the optimal path',
+        '←↑→↓ - Directional movement',
+        'H - Toggle path optimization',
+        'Space - Pause/Resume',
+        'Click - Select inventory items',
+        'Enter - Start/Restart game'
       ],
     },
     {
-      title: 'Game Mechanics',
-      icon: Star,
+      title: 'Game Elements',
+      icon: Sparkles,
       content: [
-        'Snake grows longer with each food collected',
-        'Game speed increases as your snake grows',
-        'Special collectibles appear after collecting enough food',
-        'Inventory has a weight limit for collectibles',
-        'Sell collectibles to earn coins',
+        {
+          icon: <Gem className="text-green-500" />,
+          text: 'Crystal: Low weight, basic value'
+        },
+        {
+          icon: <Zap className="text-blue-500" />,
+          text: 'Gem: Balanced value/weight'
+        },
+        {
+          icon: <Sparkles className="text-purple-500" />,
+          text: 'Potion: High value, heavy'
+        },
+        {
+          icon: <List className="text-red-500" />,
+          text: 'Artifact: Rare, maximum value'
+        }
       ],
-    },
-    {
-      title: 'Scoring & Stats',
-      icon: Trophy,
-      content: [
-        'Track your score and high score',
-        'Monitor your snake length',
-        'Collect coins from selling items',
-        'Keep track of food eaten',
-        'Manage your inventory weight',
-      ],
-    },
-    {
-      title: 'Tips & Tricks',
-      icon: Lightbulb,
-      content: [
-        'Use the hint system (H key) to find optimal paths',
-        'Plan your route to collect both food and items',
-        'Watch your inventory weight to avoid losing collectibles',
-        'Use walls strategically to navigate the board',
-        'Practice controlling your snake at higher speeds',
-      ],
-    },
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-background py-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-pixel text-white mb-4">Game Help</h1>
-          <p className="text-muted-foreground font-pixel">
-            Everything you need to know about Sn<span className="text-game-snake">algo</span>
-          </p>
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center my-12">
+          <h1 className="text-4xl font-pixel text-white mb-4">Snalgo Guide</h1>
+          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+            <span className="font-pixel">Survive</span>
+            <span>•</span>
+            <span className="font-pixel">Collect</span>
+            <span>•</span>
+            <span className="font-pixel">Optimize</span>
+          </div>
         </div>
 
         <div className="space-y-8">
@@ -66,25 +70,39 @@ const HelpPage = () => {
             return (
               <div
                 key={section.title}
-                className="bg-muted/20 backdrop-blur-sm rounded-xl p-6 border border-border/40 hover:border-game-snake/50 transition-all duration-300"
+                className="bg-muted/20 rounded-xl p-6 border border-game-border"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-game-snake">
                     <Icon size={24} />
                   </div>
-                  <h2 className="text-2xl font-pixel text-white">{section.title}</h2>
+                  <h2 className="text-xl font-pixel text-white">{section.title}</h2>
                 </div>
-                <ul className="space-y-3">
+                
+                <div className="space-y-3">
                   {section.content.map((item, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <ArrowRight className="text-game-snake mt-1" size={16} />
-                      <span className="text-muted-foreground">{item}</span>
-                    </li>
+                    <div key={index} className="flex items-start gap-3">
+                      {section.title === 'Game Elements' ? (
+                        <>
+                          <span className="shrink-0">{(item as { icon: React.JSX.Element, text: string }).icon}</span>
+                          <span className="text-muted-foreground">{(item as { icon: React.JSX.Element, text: string }).text}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-game-snake mt-1">▹</span>
+                          <span className="text-muted-foreground">{item as string}</span>
+                        </>
+                      )}
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-12 text-center text-muted-foreground font-pixel">
+          <p>Tip: Efficiency matters! Plan your collection route carefully.</p>
         </div>
       </div>
     </div>

@@ -321,6 +321,13 @@
     --game-border: 240 25% 20%;
 
     --radius: 0;
+
+    --game-green: #00ff00;
+    --game-red: #ff4656;
+    --game-yellow: #ffd700;
+    --game-blue: #00a8ff;
+    --game-bg: #0a160f;
+    --game-border: #1a2e22;
   }
 
   * {
@@ -583,4 +590,30 @@
 }
 .animate-dash {
   animation: dash 1s linear infinite;
+}
+
+.shadow-pixel {
+  box-shadow: 4px 4px 0 var(--game-green);
+}
+
+.border-game-green {
+  border-color: var(--game-green);
+}
+.border-game-red {
+  border-color: var(--game-red);
+}
+.border-game-yellow {
+  border-color: var(--game-yellow);
+}
+.border-game-blue {
+  border-color: var(--game-blue);
+}
+.bg-game-bg {
+  background: var(--game-bg);
+}
+.border-game-border {
+  border-color: var(--game-border);
+}
+.text-game-green {
+  color: var(--game-green);
 }
