@@ -50,10 +50,12 @@ import {
   Trophy,
   Lightbulb,
   RefreshCw,
+  Satellite,
 } from "lucide-react";
 import { useGameStore } from "@/stores/useGameStore";
 import { LeaderboardEntry, LeaderboardService } from "@/services/leaderboard";
 import { useSessionStore } from "@/stores/session";
+import { motion } from "framer-motion";
 
 interface GameStats {
   score: number;
@@ -800,21 +802,44 @@ const GameBoard: React.FC = () => {
     </div>
   );
 
-  // Updated mobile controls with haptic feedback and larger touch targets
+  // Enhanced mobile controls with TSP button
   const MobileControls = () => (
     <div className="md:hidden fixed bottom-4 left-0 right-0 px-4 z-[1000]">
       <div className="relative bg-black/30 backdrop-blur-lg rounded-2xl p-2 shadow-2xl">
         <div className="grid grid-cols-3 gap-2 items-center justify-center">
+          {/* TSP Button */}
+          <div className="col-span-3 flex justify-center mb-2">
+            <PixelButton
+              onClick={calculateHint}
+              disabled={
+                gameState !== GameState.PLAYING ||
+                (food.length === 0 &&
+                  collectibles.length === 0 &&
+                  !hintActiveRef.current)
+              }
+              variant={hintActiveRef.current ? 'glow' : 'default'}
+              className="w-full max-w-[200px] h-12 transform active:scale-95 transition-transform"
+            >
+              <Lightbulb size={18} className="mr-2 text-yellow-400" />
+              <span className="font-pixel text-sm">
+                {hintActiveRef.current ? 'ACTIVE PATH' : 'OPTIMIZE ROUTE'}
+              </span>
+              {hintActiveRef.current && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                </div>
+              )}
+            </PixelButton>
+          </div>
+
+          {/* Directional Controls */}
           <div className="col-start-2 flex justify-center">
             <PixelButton
-              onClick={() => {
-                navigator.vibrate?.(50);
-                handleDirectionButton(Direction.UP);
-              }}
-              className="w-20 h-20 active:scale-90 transition-transform"
+              onClick={() => handleDirectionButton(Direction.UP)}
+              className="w-16 h-16 active:scale-90 transition-transform"
               variant="glow"
             >
-              <ChevronUp size={32} />
+              <ChevronUp size={28} />
             </PixelButton>
           </div>
           
@@ -822,16 +847,13 @@ const GameBoard: React.FC = () => {
             {[Direction.LEFT, Direction.DOWN, Direction.RIGHT].map((dir) => (
               <PixelButton
                 key={dir}
-                onClick={() => {
-                  navigator.vibrate?.(30);
-                  handleDirectionButton(dir);
-                }}
-                className="w-20 h-20 active:scale-90 transition-transform"
+                onClick={() => handleDirectionButton(dir)}
+                className="w-16 h-16 active:scale-90 transition-transform"
                 variant="secondary"
               >
-                {dir === Direction.LEFT && <ChevronLeft size={32} />}
-                {dir === Direction.DOWN && <ChevronDown size={32} />}
-                {dir === Direction.RIGHT && <ChevronRight size={32} />}
+                {dir === Direction.LEFT && <ChevronLeft size={28} />}
+                {dir === Direction.DOWN && <ChevronDown size={28} />}
+                {dir === Direction.RIGHT && <ChevronRight size={28} />}
               </PixelButton>
             ))}
           </div>
@@ -841,7 +863,7 @@ const GameBoard: React.FC = () => {
   );
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-noise-texture">
+    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 md:p-4 bg-noise-texture">
       <LeaderboardSection />
       
       <div
@@ -1003,99 +1025,138 @@ const GameBoard: React.FC = () => {
           ))}
 
           {gameState !== GameState.PLAYING && (
-            <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
-              {gameState === GameState.READY && (
-                <div className="flex flex-col items-center text-center">
-                  <input
-                    type="text"
-                    placeholder="Enter your name..."
-                    className="font-pixel mb-4 p-2 bg-black/50 text-white text-center border-2 border-white/30 rounded-md focus:outline-none focus:border-primary"
-                    value={guestName}
-                    onChange={(e) =>
-                      useSessionStore.getState().setGuestName(e.target.value)
-                    }
-                    maxLength={20}
+            <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center">
+              {/* Animated background particles */}
+              <div className="absolute inset-0 overflow-hidden">
+                {Array.from({ length: 50 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-primary/30 animate-float"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      animationDelay: `${i * 0.1}s`
+                    }}
                   />
-                  <p className="font-pixel text-sm text-white/80 mb-6">
-                    Use arrow keys or touch controls to guide the snake.
-                    <br />
-                    Press &apos;H&apos; for path optimization.
-                  </p>
-                  <PixelButton
-                    onClick={startGame}
-                    size="lg"
-                    className="transform hover:scale-110 transition-transform duration-200"
-                  >
-                    Start Game
-                  </PixelButton>
-                </div>
-              )}
+                ))}
+              </div>
 
-              {gameState === GameState.GAME_OVER && (
-                <div className="text-center animate-pixel-shake">
-                  <h2 className="font-pixel text-3xl text-red-500 mb-4 animate-pulse">
-                    Game Over
-                  </h2>
-                  <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
-                    <p className="font-pixel text-lg text-white mb-2">
-                      Final Score: {stats.score}
-                    </p>
-                    {stats.score === stats.highScore && stats.score > 0 && (
-                      <p className="font-pixel text-lg text-yellow-500 animate-bounce">
-                        🏆 New High Score! 🏆
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-4 justify-center">
+              {gameState === GameState.READY && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative bg-black/80 p-8 rounded-xl border-4 border-white/20 shadow-2xl max-w-md w-full mx-4"
+                >
+                  <div className="space-y-6 text-center">
+                    <div className="animate-float-slow">
+                      <Lightbulb className="h-16 w-16 mx-auto text-yellow-400 mb-4 pixelated" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="ENTER CODENAME"
+                      className="font-pixel w-full p-4 bg-black/70 text-white text-center border-4 border-white/30 rounded-lg 
+                               focus:outline-none focus:border-primary focus:ring-0
+                               transition-all duration-300 placeholder-white/50 pixelated-input"
+                      value={guestName}
+                      onChange={(e) => useSessionStore.getState().setGuestName(e.target.value)}
+                      maxLength={20}
+                    />
                     <PixelButton
                       onClick={startGame}
-                      className="transform hover:scale-110 transition-transform duration-200"
+                      size="lg"
+                      className="w-full transform hover:scale-105 transition-all 
+                               bg-gradient-to-r from-green-500 to-blue-600 shadow-2xl pixelated"
                     >
-                      Play Again
+                      START MISSION
                     </PixelButton>
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              {gameState === GameState.WIN && (
-                <div className="text-center">
-                  <h2 className="font-pixel text-3xl text-green-500 mb-4 animate-pulse">
-                    Victory! 🎉
-                  </h2>
-                  <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
-                    <p className="font-pixel text-lg text-white mb-2">
-                      Final Score: {stats.score}
-                    </p>
-                    {stats.score === stats.highScore && (
-                      <p className="font-pixel text-lg text-yellow-500 animate-bounce">
-                        🏆 New High Score! 🏆
-                      </p>
-                    )}
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div>
-                        <p className="text-gray-400 text-sm">Food Eaten</p>
-                        <p className="text-xl font-bold text-white">
-                          {stats.foodEaten}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">Coins</p>
-                        <p className="text-xl font-bold text-yellow-400">
-                          {coins}
-                        </p>
-                      </div>
+              {(gameState === GameState.GAME_OVER || gameState === GameState.WIN) && (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative bg-gradient-to-br from-gray-900 to-purple-900/80 p-8 rounded-2xl border-2 border-white/20 shadow-2xl max-w-md w-full mx-4"
+                >
+                  {/* Animated victory/game over icon */}
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2">
+                    <div className="relative animate-pulse-glow">
+                      {gameState === GameState.WIN ? (
+                        <Trophy className="h-24 w-24 text-yellow-400" />
+                      ) : (
+                        <Satellite className="h-24 w-24 text-red-500 animate-spin-slow" />
+                      )}
+                      <div className="absolute inset-0 bg-current blur-xl opacity-20" />
                     </div>
                   </div>
-                  <div className="flex gap-4 justify-center">
+
+                  <div className="space-y-6 text-center">
+                    <h2 className="font-pixel text-4xl mb-4 bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent">
+                      {gameState === GameState.WIN ? 'MISSION ACCOMPLISHED' : 'SYSTEM FAILURE'}
+                    </h2>
+                    
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-4 font-pixel">
+                      <div className="p-4 bg-black/30 rounded-lg border border-white/10">
+                        <p className="text-sm text-white/70 mb-1">SCORE</p>
+                        <p className="text-2xl text-yellow-400">{stats.score}</p>
+                      </div>
+                      <div className="p-4 bg-black/30 rounded-lg border border-white/10">
+                        <p className="text-sm text-white/70 mb-1">LEVEL</p>
+                        <p className="text-2xl text-purple-400">{stats.level}</p>
+                      </div>
+                      {gameState === GameState.WIN && (
+                        <>
+                          <div className="p-4 bg-black/30 rounded-lg border border-white/10">
+                            <p className="text-sm text-white/70 mb-1">FOOD</p>
+                            <p className="text-2xl text-green-400">{stats.foodEaten}</p>
+                          </div>
+                          <div className="p-4 bg-black/30 rounded-lg border border-white/10">
+                            <p className="text-sm text-white/70 mb-1">VALUE</p>
+                            <p className="text-2xl text-cyan-400">{coins}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* High Score Badge */}
+                    {stats.score === stats.highScore && (
+                      <div className="animate-bounce-slow bg-gradient-to-r from-yellow-500 to-amber-600 p-2 rounded-full">
+                        <span className="font-pixel text-sm">🏆 NEW GALACTIC RECORD 🏆</span>
+                      </div>
+                    )}
+
                     <PixelButton
                       onClick={startGame}
-                      className="transform hover:scale-110 transition-transform duration-200"
+                      size="lg"
+                      className="w-full transform hover:scale-105 hover:-rotate-1 transition-all 
+                               bg-gradient-to-r from-purple-600 to-cyan-500 shadow-2xl"
                     >
-                      Play Again
+                      {gameState === GameState.WIN ? 'NEXT WARP JUMP' : 'REBOOT SYSTEMS'}
                     </PixelButton>
                   </div>
-                </div>
+                </motion.div>
               )}
+
+              {/* Animated connection lines */}
+              <div className="absolute inset-0 pointer-events-none">
+                <svg className="w-full h-full">
+                  <pattern
+                    id="connection-pattern"
+                    width="20"
+                    height="20"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M0 20L20 0"
+                      stroke="rgba(255,255,255,0.1)"
+                      strokeWidth="1"
+                    />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#connection-pattern)" />
+                </svg>
+              </div>
             </div>
           )}
         </div>
