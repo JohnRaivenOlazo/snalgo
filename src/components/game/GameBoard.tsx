@@ -56,6 +56,7 @@ import { useGameStore } from "@/stores/useGameStore";
 import { LeaderboardEntry, LeaderboardService } from "@/services/leaderboard";
 import { useSessionStore } from "@/stores/session";
 import { motion } from "framer-motion";
+import { Howl } from "howler";
 
 interface GameStats {
   score: number;
@@ -198,9 +199,52 @@ const GameBoard: React.FC = () => {
     }));
   }, [gridSizeX, gridSizeY]);
 
+  const sound = useRef<Howl | null>(null);
+  const deathSound = useRef<Howl | null>(null);
+
+  useEffect(() => {
+    sound.current = new Howl({
+      src: ["/bg-music.mp3"],
+      loop: true,
+      volume: 0.3,
+      preload: true
+    });
+
+    deathSound.current = new Howl({
+      src: ["/death.mp3"],
+      volume: 0.5,
+      preload: true
+    });
+
+    return () => {
+      sound.current?.unload();
+      deathSound.current?.unload();
+      sound.current = null;
+      deathSound.current = null;
+    };
+  }, []);
+
   const startGame = useCallback(() => {
     if (!useSessionStore.getState().validateName()) {
       return;
+    }
+
+    // Create a temporary click handler for audio unlock
+    const handleFirstClick = () => {
+      if (sound.current && !sound.current.playing()) {
+        sound.current.play();
+      }
+      document.removeEventListener('click', handleFirstClick);
+    };
+
+    // Add click listener to unlock audio
+    document.addEventListener('click', handleFirstClick);
+
+    // Restart music properly
+    if (sound.current) {
+      sound.current.stop();
+      sound.current.seek(0); // Reset to beginning
+      sound.current.play();
     }
 
     if (
@@ -217,7 +261,11 @@ const GameBoard: React.FC = () => {
 
   const gameOver = useCallback(
     async (message = "") => {
-      let submissionStatus: "new_high" | "submitted" | "not_submitted" = "not_submitted";
+      // Play death sound
+      deathSound.current?.play();
+
+      let submissionStatus: "new_high" | "submitted" | "not_submitted" =
+        "not_submitted";
       const currentScore = stats.score;
 
       // Only submit if score is in top 10 potential
@@ -225,10 +273,13 @@ const GameBoard: React.FC = () => {
         // Get current top scores to validate submission
         const topScores = await LeaderboardService.getTopScores(10);
         const lowestTopScore = topScores[topScores.length - 1]?.score || 0;
-        
+
         // Only submit if score is in top 10 or there's empty slots
         if (currentScore > lowestTopScore || topScores.length < 10) {
-          submissionStatus = await LeaderboardService.submitScore(currentScore, stats.level);
+          submissionStatus = await LeaderboardService.submitScore(
+            currentScore,
+            stats.level
+          );
         }
       }
 
@@ -319,7 +370,9 @@ const GameBoard: React.FC = () => {
     }
 
     // Ensure at least one collectible is within capacity
-    const hasValidCollectible = newCollectibles.some(c => c.weight <= capacity);
+    const hasValidCollectible = newCollectibles.some(
+      (c) => c.weight <= capacity
+    );
     if (!hasValidCollectible && newCollectibles.length > 0) {
       // Replace last collectible with a guaranteed valid one
       newCollectibles[newCollectibles.length - 1] = generateCollectible(
@@ -336,7 +389,7 @@ const GameBoard: React.FC = () => {
 
     setFood(newFood);
     setCollectibles(newCollectibles);
-    setStats(prev => ({
+    setStats((prev) => ({
       ...prev,
       totalValue: 0,
       totalWeight: 0,
@@ -760,7 +813,13 @@ const GameBoard: React.FC = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <span className="font-pixel text-white/80 text-xs w-6 text-center">
-                  {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `#${entry.rank}`}
+                  {entry.rank === 1
+                    ? "🥇"
+                    : entry.rank === 2
+                    ? "🥈"
+                    : entry.rank === 3
+                    ? "🥉"
+                    : `#${entry.rank}`}
                 </span>
                 <span className="text-white/80 text-xs font-pixel truncate max-w-[100px]">
                   {entry.username}
@@ -795,7 +854,7 @@ const GameBoard: React.FC = () => {
             <p className="font-pixel text-lg text-yellow-400">{stats.score}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3 p-2 bg-black/20 rounded-sm border border-white/5">
           <div className="relative">
             <Trophy className="text-purple-400 w-6 h-6 animate-bounce-slow" />
@@ -816,9 +875,12 @@ const GameBoard: React.FC = () => {
       <div className="absolute inset-0 bg-primary/5 blur-xl opacity-30 animate-pulse-slow" />
       <Inventory
         items={useMemo(
-          () => inventory.filter((item) =>
-            Object.values(CollectibleType).includes(item.type as CollectibleType)
-          ),
+          () =>
+            inventory.filter((item) =>
+              Object.values(CollectibleType).includes(
+                item.type as CollectibleType
+              )
+            ),
           []
         )}
         capacity={useGameStore.getState().capacity}
@@ -845,12 +907,12 @@ const GameBoard: React.FC = () => {
                   collectibles.length === 0 &&
                   !hintActiveRef.current)
               }
-              variant={hintActiveRef.current ? 'glow' : 'default'}
+              variant={hintActiveRef.current ? "glow" : "default"}
               className="w-full max-w-[200px] h-12 transform active:scale-95 transition-transform"
             >
               <Lightbulb size={18} className="mr-2 text-yellow-400" />
               <span className="font-pixel text-sm">
-                {hintActiveRef.current ? 'ACTIVE PATH' : 'OPTIMIZE ROUTE'}
+                {hintActiveRef.current ? "ACTIVE PATH" : "OPTIMIZE ROUTE"}
               </span>
               {hintActiveRef.current && (
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -870,7 +932,7 @@ const GameBoard: React.FC = () => {
               <ChevronUp size={28} />
             </PixelButton>
           </div>
-          
+
           <div className="col-span-3 flex justify-between mt-2">
             {[Direction.LEFT, Direction.DOWN, Direction.RIGHT].map((dir) => (
               <PixelButton
@@ -890,10 +952,30 @@ const GameBoard: React.FC = () => {
     </div>
   );
 
+  // Update game over/win effect
+  useEffect(() => {
+    if (gameState === GameState.GAME_OVER || gameState === GameState.WIN) {
+      sound.current?.pause();
+    }
+  }, [gameState]);
+
+  // Add state for particles
+  const [particles, setParticles] = useState<Array<{ left: string; top: string; delay: string }>>([]);
+
+  // Generate particles after component mounts
+  useEffect(() => {
+    const newParticles = Array.from({ length: 50 }).map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 2}s`
+    }));
+    setParticles(newParticles);
+  }, []);
+
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 px-0 md:p-4 bg-noise-texture">
       <LeaderboardSection />
-      
+
       <div
         className="md:col-span-2 relative"
         style={{ height: "70vh", maxHeight: "800px" }}
@@ -1056,14 +1138,14 @@ const GameBoard: React.FC = () => {
             <div className="absolute -inset-4 z-50 bg-black/98 backdrop-blur-3xl flex items-center justify-center overflow-hidden rounded-none">
               {/* Animated background particles */}
               <div className="absolute inset-0 overflow-hidden">
-                {Array.from({ length: 50 }).map((_, i) => (
+                {particles.map((particle, i) => (
                   <div
                     key={i}
                     className="absolute w-1 h-1 bg-primary/30 animate-float"
                     style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDelay: `${i * 0.1}s`
+                      left: particle.left,
+                      top: particle.top,
+                      animationDelay: particle.delay
                     }}
                   />
                 ))}
@@ -1086,7 +1168,9 @@ const GameBoard: React.FC = () => {
                                focus:outline-none focus:border-primary focus:ring-0
                                transition-all duration-300 placeholder-white/50 pixelated-input"
                       value={guestName}
-                      onChange={(e) => useSessionStore.getState().setGuestName(e.target.value)}
+                      onChange={(e) =>
+                        useSessionStore.getState().setGuestName(e.target.value)
+                      }
                       maxLength={20}
                     />
                     <PixelButton
@@ -1101,7 +1185,8 @@ const GameBoard: React.FC = () => {
                 </motion.div>
               )}
 
-              {(gameState === GameState.GAME_OVER || gameState === GameState.WIN) && (
+              {(gameState === GameState.GAME_OVER ||
+                gameState === GameState.WIN) && (
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -1121,24 +1206,32 @@ const GameBoard: React.FC = () => {
 
                   <div className="space-y-6 text-center">
                     <h2 className="font-pixel text-4xl mb-4 bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent">
-                      {gameState === GameState.WIN ? 'MISSION ACCOMPLISHED' : 'SYSTEM FAILURE'}
+                      {gameState === GameState.WIN
+                        ? "MISSION ACCOMPLISHED"
+                        : "SYSTEM FAILURE"}
                     </h2>
-                    
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 gap-4 font-pixel">
                       <div className="p-4 bg-black/30 rounded-lg border border-white/10">
                         <p className="text-sm text-white/70 mb-1">SCORE</p>
-                        <p className="text-2xl text-yellow-400">{stats.score}</p>
+                        <p className="text-2xl text-yellow-400">
+                          {stats.score}
+                        </p>
                       </div>
                       <div className="p-4 bg-black/30 rounded-lg border border-white/10">
                         <p className="text-sm text-white/70 mb-1">LEVEL</p>
-                        <p className="text-2xl text-purple-400">{stats.level}</p>
+                        <p className="text-2xl text-purple-400">
+                          {stats.level}
+                        </p>
                       </div>
                       {gameState === GameState.WIN && (
                         <>
                           <div className="p-4 bg-black/30 rounded-lg border border-white/10">
                             <p className="text-sm text-white/70 mb-1">FOOD</p>
-                            <p className="text-2xl text-green-400">{stats.foodEaten}</p>
+                            <p className="text-2xl text-green-400">
+                              {stats.foodEaten}
+                            </p>
                           </div>
                           <div className="p-4 bg-black/30 rounded-lg border border-white/10">
                             <p className="text-sm text-white/70 mb-1">VALUE</p>
@@ -1151,7 +1244,9 @@ const GameBoard: React.FC = () => {
                     {/* High Score Badge */}
                     {stats.score === stats.highScore && (
                       <div className="animate-bounce-slow bg-gradient-to-r from-yellow-500 to-amber-600 p-2 rounded-full">
-                        <span className="font-pixel text-sm">🏆 NEW GALACTIC RECORD 🏆</span>
+                        <span className="font-pixel text-sm">
+                          🏆 NEW GALACTIC RECORD 🏆
+                        </span>
                       </div>
                     )}
 
@@ -1161,7 +1256,9 @@ const GameBoard: React.FC = () => {
                       className="w-full transform hover:scale-105 hover:-rotate-1 transition-all 
                                bg-gradient-to-r from-purple-600 to-cyan-500 shadow-2xl"
                     >
-                      {gameState === GameState.WIN ? 'NEXT WARP JUMP' : 'REBOOT SYSTEMS'}
+                      {gameState === GameState.WIN
+                        ? "NEXT WARP JUMP"
+                        : "REBOOT SYSTEMS"}
                     </PixelButton>
                   </div>
                 </motion.div>
@@ -1182,7 +1279,11 @@ const GameBoard: React.FC = () => {
                       strokeWidth="1"
                     />
                   </pattern>
-                  <rect width="100%" height="100%" fill="url(#connection-pattern)" />
+                  <rect
+                    width="100%"
+                    height="100%"
+                    fill="url(#connection-pattern)"
+                  />
                 </svg>
               </div>
             </div>
@@ -1193,7 +1294,7 @@ const GameBoard: React.FC = () => {
       <div className="md:col-span-1 flex flex-col gap-4">
         <StatsDisplay />
         <InventorySection />
-        
+
         {/* Enhanced Hint Button */}
         <div className="mt-4 relative group">
           <div className="absolute inset-0 bg-primary/10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1205,14 +1306,14 @@ const GameBoard: React.FC = () => {
                 collectibles.length === 0 &&
                 !hintActiveRef.current)
             }
-            variant={hintActiveRef.current ? 'glow' : 'default'}
+            variant={hintActiveRef.current ? "glow" : "default"}
             className="w-full transform hover:scale-105 transition-transform 
                      duration-300 shadow-2xl hover:shadow-primary/30
                      border-2 border-white/10 bg-gradient-to-br from-gray-900 to-gray-800"
           >
             <Lightbulb size={18} className="mr-2 text-yellow-400" />
             <span className="font-pixel text-sm">
-              {hintActiveRef.current ? 'ACTIVE PATHING' : 'OPTIMIZE ROUTE'}
+              {hintActiveRef.current ? "ACTIVE PATHING" : "OPTIMIZE ROUTE"}
             </span>
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -1222,6 +1323,13 @@ const GameBoard: React.FC = () => {
       </div>
 
       <MobileControls />
+
+      <PixelButton 
+        onClick={() => sound.current?.play()}
+        className="mt-4"
+      >
+        Test Music
+      </PixelButton>
     </div>
   );
 };
