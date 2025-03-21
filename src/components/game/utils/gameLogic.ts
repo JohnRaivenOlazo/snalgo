@@ -160,7 +160,9 @@ export const generateCollectible = (
   existingCollectibles: Collectible[] = [],
   gridWidth: number,
   gridHeight: number,
-  level: number = 1
+  level: number = 1,
+  capacity: number,
+  forceValid: boolean = false
 ): Collectible => {
   const occupiedPositions = [
     ...snake.map(segment => `${segment.x},${segment.y}`),
@@ -184,34 +186,30 @@ export const generateCollectible = (
   };
 
   const type = weightedRandom(CollectibleType, typeWeights);
-  const props = COLLECTIBLE_PROPERTIES[type];
   
-  // Value increases exponentially with level
-  const valueMultiplier = 1 + Math.pow(level, 1.2) * 0.15;
-  const weightMultiplier = 1 + Math.pow(level, 1.1) * 0.1;
-  
-  const quantity = Math.floor(1 + Math.random() * (2 + Math.floor(level/3)));
-  const value = Math.floor(
-    (props.minValue + Math.random() * (props.maxValue - props.minValue)) *
-    valueMultiplier *
-    quantity
+  // Dynamic weight calculation based on capacity
+  const maxPossibleWeight = forceValid ? capacity : Math.min(
+    capacity + 5,
+    BASE_WEIGHT_THRESHOLD + (level * WEIGHT_THRESHOLD_INCREMENT)
   );
   
-  const weight = Math.floor(
-    (props.minWeight + Math.random() * (props.maxWeight - props.minWeight)) *
-    weightMultiplier *
-    quantity
-  );
+  const weight = forceValid 
+    ? Math.floor(capacity * 0.8)
+    : Math.floor(Math.random() * maxPossibleWeight) + 1;
+
+  // Balanced value calculation
+  const baseValue = Math.floor(weight * 0.8); // Reduced from weight multiplier
+  const levelBonus = Math.floor(baseValue * (level * 0.1)); // Reduced from 20% to 10% per level
+  const value = baseValue + levelBonus;
 
   return {
     id: uuidv4(),
     position,
     value,
-    sellValue: Math.floor(value * (0.5 + Math.random() * 0.3)),
+    sellValue: Math.floor(value * 0.5), // Reduced from 70% to 50%
     weight,
     type,
     color: COLLECTIBLE_COLORS[type],
-    quantity,
   };
 };
 

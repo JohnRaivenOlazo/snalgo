@@ -171,7 +171,9 @@ const GameBoard: React.FC = () => {
           initialFood,
           initialCollectibles,
           gridSizeX,
-          gridSizeY
+          gridSizeY,
+          1, // Initial level
+          useGameStore.getState().capacity // Current capacity
         )
       );
     }
@@ -290,38 +292,56 @@ const GameBoard: React.FC = () => {
   );
 
   const generateNewLevel = useCallback(() => {
+    const capacity = useGameStore.getState().capacity;
     const newFood: FoodItem[] = [];
     const newCollectibles: Collectible[] = [];
 
-    // Generate food based on level
+    // Generate food normally
     for (let i = 0; i < BASE_FOOD_REQUIREMENT + stats.level; i++) {
       newFood.push(
         generateFood(snake, newFood, newCollectibles, gridSizeX, gridSizeY)
       );
     }
 
-    // Generate collectibles - 5 base + 3 per level (capped at 15)
+    // Generate collectibles with guaranteed capacity compliance
     const collectibleCount = 5 + Math.min(stats.level * 3, 10);
     for (let i = 0; i < collectibleCount; i++) {
-      newCollectibles.push(
-        generateCollectible(
-          snake,
-          newFood,
-          newCollectibles,
-          gridSizeX,
-          gridSizeY,
-          stats.level
-        )
+      const collectible = generateCollectible(
+        snake,
+        newFood,
+        newCollectibles,
+        gridSizeX,
+        gridSizeY,
+        stats.level,
+        capacity // Pass current capacity to generator
+      );
+      newCollectibles.push(collectible);
+    }
+
+    // Ensure at least one collectible is within capacity
+    const hasValidCollectible = newCollectibles.some(c => c.weight <= capacity);
+    if (!hasValidCollectible && newCollectibles.length > 0) {
+      // Replace last collectible with a guaranteed valid one
+      newCollectibles[newCollectibles.length - 1] = generateCollectible(
+        snake,
+        newFood,
+        newCollectibles,
+        gridSizeX,
+        gridSizeY,
+        stats.level,
+        capacity,
+        true // Force valid weight
       );
     }
 
     setFood(newFood);
     setCollectibles(newCollectibles);
-    setStats((prev) => ({
+    setStats(prev => ({
       ...prev,
       totalValue: 0,
       totalWeight: 0,
       inventoryCurrentWeight: 0,
+      score: prev.score + Math.floor(prev.totalValue * 0.1),
     }));
     setInventory([]);
     upgradeInventoryCapacity();
@@ -356,10 +376,11 @@ const GameBoard: React.FC = () => {
       BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
     const totalWeight = inventory.reduce((sum, item) => sum + item.weight, 0);
 
-    // Immediate weight check before processing movement
-    if (totalWeight > useGameStore.getState().capacity) {
+    // Modified capacity check using store value
+    const capacity = useGameStore.getState().capacity;
+    if (totalWeight > capacity) {
       setGameState(GameState.GAME_OVER);
-      gameOver(`Capacity exceeded! (${totalWeight}/${currentThreshold})`);
+      gameOver(`Capacity exceeded! (${totalWeight}/${capacity})`);
       return;
     }
 
@@ -494,7 +515,7 @@ const GameBoard: React.FC = () => {
         collectiblesCollected: prev.collectiblesCollected + 1,
         inventoryCurrentWeight: newWeight,
         totalValue: prev.totalValue + eatenCollectible.value,
-        score: prev.score + eatenCollectible.value,
+        score: prev.score + Math.floor(eatenCollectible.value * 0.8),
         totalWeight: prev.totalWeight + eatenCollectible.weight,
       }));
 
