@@ -23,6 +23,7 @@ import {
   SortStep,
 } from "@/components/game/utils/algorithms";
 import { useGameStore } from "@/stores/useGameStore";
+import { toast } from "sonner";
 
 interface InventoryProps {
   items: InventoryItem[];
@@ -73,11 +74,24 @@ const Inventory: React.FC<InventoryProps> = ({
   };
 
   const handleSort = (sortBy: "value" | "weight" | "type" | "timestamp") => {
-    if (sortBy === sortBy) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortOrder("asc");
+    setIsDropdownOpen(false);
+
+    if (items.length === 0) {
+      toast.error("No collectibles to sort!", {
+        icon: <Package size={14} className="text-red-500" />
+      });
+      return;
     }
+
+    const newOrder = sortOrder === "asc" ? "desc" : "asc";
+    setSortOrder(newOrder);
+
+    toast.success(`Sorted by ${
+      sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
+    } (${newOrder === 'asc' ? 'Ascending' : 'Descending'})`, {
+      icon: <ArrowUpDown size={14} className="text-primary" />
+    });
+
     setSearchSteps([]);
     setCurrentSearchStep(-1);
     setSearchTerm("");
@@ -85,7 +99,7 @@ const Inventory: React.FC<InventoryProps> = ({
     setFilteredItems(sortedItems);
 
     const compareFn = (a: InventoryItem, b: InventoryItem) => {
-      if (sortOrder === "asc") {
+      if (newOrder === "asc") {
         return a[sortBy] > b[sortBy] ? 1 : -1;
       } else {
         return a[sortBy] < b[sortBy] ? 1 : -1;
@@ -216,19 +230,28 @@ const Inventory: React.FC<InventoryProps> = ({
               <div className="absolute mt-1 w-full bg-background border border-game-border z-10 animate-fade-in">
                 <div
                   className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => handleSort("value")}
+                  onClick={() => {
+                    handleSort("value");
+                    setIsDropdownOpen(false);
+                  }}
                 >
                   Value
                 </div>
                 <div
                   className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => handleSort("weight")}
+                  onClick={() => {
+                    handleSort("weight");
+                    setIsDropdownOpen(false);
+                  }}
                 >
                   Weight
                 </div>
                 <div
                   className="p-2 text-[8px] font-pixel text-white cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => handleSort("type")}
+                  onClick={() => {
+                    handleSort("type");
+                    setIsDropdownOpen(false);
+                  }}
                 >
                   Type
                 </div>

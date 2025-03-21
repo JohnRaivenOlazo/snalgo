@@ -146,7 +146,7 @@ const GameBoard: React.FC = () => {
 
   const initGame = useCallback(() => {
     useGameStore.getState().reset();
-    
+
     if (gridSizeX < 10 || gridSizeY < 10) return;
 
     const initialSnake = createInitialSnake(gridSizeX, gridSizeY);
@@ -198,7 +198,7 @@ const GameBoard: React.FC = () => {
     if (!useSessionStore.getState().validateName()) {
       return;
     }
-    
+
     if (
       gameState === GameState.READY ||
       gameState === GameState.GAME_OVER ||
@@ -211,30 +211,37 @@ const GameBoard: React.FC = () => {
     boardRef.current?.focus();
   }, [gameState, initGame]);
 
-  const gameOver = useCallback(async (message = "") => {
-    let submissionStatus: 'new_high' | 'submitted' | 'not_submitted' = 'not_submitted';
-    
-    if (useSessionStore.getState().hasValidName) {
-      submissionStatus = await LeaderboardService.submitScore(stats.score, stats.level);
-    }
+  const gameOver = useCallback(
+    async (message = "") => {
+      let submissionStatus: "new_high" | "submitted" | "not_submitted" =
+        "not_submitted";
 
-    setGameState(GameState.GAME_OVER);
-    if (message) toast.error(message);
+      if (useSessionStore.getState().hasValidName) {
+        submissionStatus = await LeaderboardService.submitScore(
+          stats.score,
+          stats.level
+        );
+      }
 
-    if (submissionStatus === 'new_high') {
-      toast.success("New high score submitted to leaderboard! 🏆");
-    } else if (submissionStatus === 'submitted') {
+      setGameState(GameState.GAME_OVER);
+      if (message) toast.error(message);
+
+      if (submissionStatus === "new_high") {
+        toast.success("New high score submitted to leaderboard! 🏆");
+      } else if (submissionStatus === "submitted") {
         toast.success("Score submitted to leaderboard!");
-    }
+      }
 
-    // Update high score logic
-    const currentHigh = Math.max(stats.highScore, stats.score);
-    if (stats.score > stats.highScore) {
-      localStorage.setItem("snakeHighScore", currentHigh.toString());
-      setStats(prev => ({ ...prev, highScore: currentHigh }));
-      toast.success(`New high score: ${currentHigh}`);
-    }
-  }, [stats.score, stats.highScore, stats.level]);
+      // Update high score logic
+      const currentHigh = Math.max(stats.highScore, stats.score);
+      if (stats.score > stats.highScore) {
+        localStorage.setItem("snakeHighScore", currentHigh.toString());
+        setStats((prev) => ({ ...prev, highScore: currentHigh }));
+        toast.success(`New high score: ${currentHigh}`);
+      }
+    },
+    [stats.score, stats.highScore, stats.level]
+  );
 
   const checkWinCondition = useCallback(() => {
     if (stats.score > stats.highScore) {
@@ -279,18 +286,14 @@ const GameBoard: React.FC = () => {
   const generateNewLevel = useCallback(() => {
     const newFood: FoodItem[] = [];
     const newCollectibles: Collectible[] = [];
-    
+
     // Generate food based on level
     for (let i = 0; i < BASE_FOOD_REQUIREMENT + stats.level; i++) {
-      newFood.push(generateFood(
-        snake,
-        newFood,
-        newCollectibles,
-        gridSizeX,
-        gridSizeY
-      ));
+      newFood.push(
+        generateFood(snake, newFood, newCollectibles, gridSizeX, gridSizeY)
+      );
     }
-    
+
     // Generate collectibles - 5 base + 3 per level (capped at 15)
     const collectibleCount = 5 + Math.min(stats.level * 3, 10);
     for (let i = 0; i < collectibleCount; i++) {
@@ -305,19 +308,19 @@ const GameBoard: React.FC = () => {
         )
       );
     }
-    
+
     setFood(newFood);
     setCollectibles(newCollectibles);
-    setStats(prev => ({
+    setStats((prev) => ({
       ...prev,
       totalValue: 0,
       totalWeight: 0,
-      inventoryCurrentWeight: 0
+      inventoryCurrentWeight: 0,
     }));
     setInventory([]);
     upgradeInventoryCapacity();
   }, [stats.level, upgradeInventoryCapacity, snake, gridSizeX, gridSizeY]);
-  
+
   const updateHintPath = useCallback(
     (head: Position) => {
       if (
@@ -343,7 +346,8 @@ const GameBoard: React.FC = () => {
     if (gameState !== GameState.PLAYING) return;
 
     // Calculate current level's capacity threshold
-    const currentThreshold = BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
+    const currentThreshold =
+      BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
     const totalWeight = inventory.reduce((sum, item) => sum + item.weight, 0);
 
     // Immediate weight check before processing movement
@@ -364,18 +368,20 @@ const GameBoard: React.FC = () => {
 
       if (playerEfficiency >= 0.6) {
         // Success - progress to next level
-        setStats(prev => ({
+        setStats((prev) => ({
           ...prev,
           level: prev.level + 1,
           score: prev.score + Math.floor(prev.totalValue * 0.2), // Add 20% bonus
           totalValue: 0,
           totalWeight: 0,
-          inventoryCurrentWeight: 0
+          inventoryCurrentWeight: 0,
         }));
         generateNewLevel();
       } else {
         // Failure - show precise efficiency
-        gameOver(`Efficiency ${(playerEfficiency * 100).toFixed(1)}% (Need 60%+)`);
+        gameOver(
+          `Efficiency ${(playerEfficiency * 100).toFixed(1)}% (Need 60%+)`
+        );
       }
     }
 
@@ -436,13 +442,15 @@ const GameBoard: React.FC = () => {
         if (foodToGenerate > 0) {
           const additionalFood = [];
           for (let i = 0; i < foodToGenerate; i++) {
-            additionalFood.push(generateFood(
-              newSnake,
-              [],
-              collectibles, // Keep existing collectibles
-              gridSizeX,
-              gridSizeY
-            ));
+            additionalFood.push(
+              generateFood(
+                newSnake,
+                [],
+                collectibles, // Keep existing collectibles
+                gridSizeX,
+                gridSizeY
+              )
+            );
           }
           setFood(additionalFood);
         }
@@ -464,7 +472,8 @@ const GameBoard: React.FC = () => {
 
     if (eatenCollectible) {
       const newWeight = currentWeightRef.current + eatenCollectible.weight;
-      const currentThreshold = BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
+      const currentThreshold =
+        BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
 
       if (newWeight > currentThreshold) {
         gameOver(`Capacity exceeded! (${newWeight}/${currentThreshold})`);
@@ -477,7 +486,7 @@ const GameBoard: React.FC = () => {
         inventoryCurrentWeight: newWeight,
         totalValue: prev.totalValue + eatenCollectible.value,
         score: prev.score + eatenCollectible.value,
-        totalWeight: prev.totalWeight + eatenCollectible.weight
+        totalWeight: prev.totalWeight + eatenCollectible.weight,
       }));
 
       const newCollectibles = collectibles.filter(
@@ -502,13 +511,15 @@ const GameBoard: React.FC = () => {
         if (foodToGenerate > 0) {
           const additionalFood = [];
           for (let i = 0; i < foodToGenerate; i++) {
-            additionalFood.push(generateFood(
-              newSnake,
-              [],
-              [], // No collectibles for new food
-              gridSizeX,
-              gridSizeY
-            ));
+            additionalFood.push(
+              generateFood(
+                newSnake,
+                [],
+                [], // No collectibles for new food
+                gridSizeX,
+                gridSizeY
+              )
+            );
           }
           setFood(additionalFood);
         }
@@ -533,7 +544,21 @@ const GameBoard: React.FC = () => {
 
     // Update speed based on level
     calculateSpeed(snake.length, stats.level);
-  }, [gameState, stats.level, stats.score, food, inventory, snake, gridSizeX, gridSizeY, collectibles, gameOver, generateNewLevel, checkWinCondition, updateHintPath]);
+  }, [
+    gameState,
+    stats.level,
+    stats.score,
+    food,
+    inventory,
+    snake,
+    gridSizeX,
+    gridSizeY,
+    collectibles,
+    gameOver,
+    generateNewLevel,
+    checkWinCondition,
+    updateHintPath,
+  ]);
 
   const handleDirectionButton = (newDirection: Direction) => {
     const currentDirection = directionRef.current;
@@ -657,31 +682,21 @@ const GameBoard: React.FC = () => {
   // Update the useEffect for leaderboard
   useEffect(() => {
     const abortController = new AbortController();
-    let intervalId: NodeJS.Timeout;
-
     const loadLeaderboard = async () => {
-      try {
-        const scores = await LeaderboardService.getTopScores(10);
-        if (!abortController.signal.aborted) {
-          setTopScores(scores);
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error("Leaderboard load failed:", error);
-        }
+      const scores = await LeaderboardService.getTopScores(10);
+      if (!abortController.signal.aborted) {
+        setTopScores(scores);
       }
     };
 
     loadLeaderboard();
-    intervalId = setInterval(loadLeaderboard, 10000);
 
     return () => {
       abortController.abort();
-      clearInterval(intervalId);
+      clearInterval(setInterval(loadLeaderboard, 10000));
     };
   }, []);
 
-  // Move the hook call to the top level of the component
   const guestName = useSessionStore((state) => state.guestName);
 
   return (
@@ -689,27 +704,28 @@ const GameBoard: React.FC = () => {
       <div className="relative bg-black/20 backdrop-blur-sm rounded-lg p-2 shadow-lg">
         <div className="flex justify-between items-center mb-1">
           <h3 className="font-pixel text-white/80 text-xs">Top Players</h3>
-          <button 
-            onClick={() => {
-              LeaderboardService.getTopScores(10)
-                .then(setTopScores)
-                .catch(console.error);
+          <button
+            onClick={async () => {
+              await LeaderboardService.getTopScores(10).then(setTopScores);
+              toast.success("Leaderboard refreshed!");
             }}
             className="text-white/60 hover:text-white/90 transition-colors"
             title="Refresh leaderboard"
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw className="h-4 w-4" />
           </button>
         </div>
         <div className="space-y-1 sm:max-h-full max-h-[300px] overflow-y-auto">
           {topScores.map((entry) => (
-            <div 
+            <div
               key={entry.id}
               className="flex justify-between items-center bg-gray-900/30 p-1 rounded-sm"
             >
-              <div className="flex justify-center text-center items-center">
-                <span className="font-pixel text-white/70 text-xxs">#{entry.rank}</span>
-                <span className=" text-white/90 text-xxs truncate max-w-[80px]">
+              <div className="flex justify-center text-center items-center gap-0.5">
+                <span className="font-pixel text-white/70 text-xxs">
+                  #{entry.rank}
+                </span>
+                <span className=" text-white/60 text-xxs truncate max-w-[80px] mb-1">
                   {entry.username}
                 </span>
               </div>
@@ -867,9 +883,11 @@ const GameBoard: React.FC = () => {
                   }}
                 >
                   {/* Value/Weight Badge */}
-                  <div className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 
+                  <div
+                    className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 
                                  bg-black/90 px-1.5 py-[3px] rounded-sm border 
-                                 border-white/20 flex gap-1.5">
+                                 border-white/20 flex gap-1.5"
+                  >
                     <span className="text-[8px] font-pixel text-yellow-300 leading-none">
                       {collectible.value}
                     </span>
@@ -884,9 +902,11 @@ const GameBoard: React.FC = () => {
 
                 {/* Quantity Indicator */}
                 {collectible.quantity > 1 && (
-                  <div className="absolute -top-[6px] -right-[6px] bg-black/90 
+                  <div
+                    className="absolute -top-[6px] -right-[6px] bg-black/90 
                                  rounded-full w-4 h-4 flex items-center justify-center 
-                                 border border-white/20 shadow-pixel">
+                                 border border-white/20 shadow-pixel"
+                  >
                     <span className="text-[8px] font-pixel text-white leading-none">
                       ×{collectible.quantity}
                     </span>
@@ -905,7 +925,9 @@ const GameBoard: React.FC = () => {
                     placeholder="Enter your name..."
                     className="font-pixel mb-4 p-2 bg-black/50 text-white text-center border-2 border-white/30 rounded-md focus:outline-none focus:border-primary"
                     value={guestName}
-                    onChange={(e) => useSessionStore.getState().setGuestName(e.target.value)}
+                    onChange={(e) =>
+                      useSessionStore.getState().setGuestName(e.target.value)
+                    }
                     maxLength={20}
                   />
                   <p className="font-pixel text-sm text-white/80 mb-6">
