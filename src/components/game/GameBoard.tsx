@@ -88,35 +88,48 @@ const GameBoard: React.FC = () => {
     directionRef.current = direction;
   }, [direction]);
 
-  const [gridSizeX, setGridSizeX] = useState(0);
-  const [gridSizeY, setGridSizeY] = useState(0);
+  const [gridSizeX, setGridSizeX] = useState(30);
+  const [gridSizeY, setGridSizeY] = useState(20);
+
+  const updateGridSize = useCallback(() => {
+    if (!boardRef.current?.parentElement) return;
+    
+    const { width, height } = boardRef.current.parentElement.getBoundingClientRect();
+    // Add maximum bounds and aspect ratio constraint
+    const maxWidth = Math.min(width, window.innerWidth * 0.8);
+    const maxHeight = Math.min(height, window.innerHeight * 0.7);
+    
+    const newGridX = Math.floor(maxWidth / CELL_SIZE);
+    const newGridY = Math.floor(maxHeight / CELL_SIZE);
+
+    if (newGridX !== gridSizeX || newGridY !== gridSizeY) {
+      setGridSizeX(newGridX);
+      setGridSizeY(newGridY);
+    }
+  }, [gridSizeX, gridSizeY]);
 
   useEffect(() => {
-    const updateGridSize = () => {
-      if (boardRef.current?.parentElement) {
-        const { width, height } = boardRef.current.parentElement.getBoundingClientRect();
-        
-        // Calculate grid dimensions based on CELL_SIZE
-        const calculatedGridSizeX = Math.floor(width / CELL_SIZE);
-        const calculatedGridSizeY = Math.floor(height / CELL_SIZE);
-
-        setGridSizeX(calculatedGridSizeX);
-        setGridSizeY(calculatedGridSizeY);
-
-        if (boardRef.current) {
-          boardRef.current.style.width = `${calculatedGridSizeX * CELL_SIZE}px`;
-          boardRef.current.style.height = `${calculatedGridSizeY * CELL_SIZE}px`;
-        }
-      }
+    let resizeTimeout: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateGridSize, 100);
     };
 
-    // Initial calculation
-    updateGridSize();
-    window.addEventListener('resize', updateGridSize);
-    return () => window.removeEventListener('resize', updateGridSize);
-  }, []);
+    const initTimeout = setTimeout(() => {
+      updateGridSize();
+      window.addEventListener('resize', handleResize);
+    }, 50);
+
+    return () => {
+      clearTimeout(initTimeout);
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [updateGridSize]);
 
   const initGame = useCallback(() => {
+    if (gridSizeX < 10 || gridSizeY < 10) return;
+    
     const initialSnake = createInitialSnake(gridSizeX, gridSizeY);
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
@@ -521,282 +534,282 @@ const GameBoard: React.FC = () => {
 
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="md:col-span-2">
-        <div className="game-container relative w-full h-full overflow-hidden">
+      <div className="md:col-span-2 relative" style={{ height: '70vh', maxHeight: '800px' }}>
+        <div
+          ref={boardRef}
+          className="relative bg-grid-pattern mx-auto"
+          style={{
+            width: `${gridSizeX * CELL_SIZE}px`,
+            height: `${gridSizeY * CELL_SIZE}px`,
+            backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+          }}
+        >
+          {/* Add depth effect */}
           <div
-            ref={boardRef}
-            className="relative bg-grid-pattern"
+            className="absolute inset-0 z-0"
             style={{
-              backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+              boxShadow: "inset 0 0 50px rgba(0, 0, 0, 0.3)",
             }}
-          >
-            {/* Add depth effect */}
+          />
+
+          {/* Add subtle scanlines */}
+          <div
+            className="absolute inset-0 z-50 pointer-events-none"
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                   0deg,
+                   rgba(0, 0, 0, 0.1) 0px,
+                   rgba(0, 0, 0, 0.1) 1px,
+                   transparent 1px,
+                   transparent 3px
+                 )`,
+            }}
+          />
+
+          {/* Add holographic snake trail effect */}
+          {snake.map((segment) => (
+            <div key={segment.id} className="absolute z-10" />
+          ))}
+
+          {!hint.length && (
             <div
-              className="absolute inset-0 z-0"
+              className="absolute top-0 left-0 w-full h-full"
               style={{
-                boxShadow: "inset 0 0 50px rgba(0, 0, 0, 0.3)",
+                backgroundImage: `
+                   linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
+                 `,
+                backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
               }}
             />
+          )}
 
-            {/* Add subtle scanlines */}
-            <div
-              className="absolute inset-0 z-50 pointer-events-none"
-              style={{
-                backgroundImage: `repeating-linear-gradient(
-                     0deg,
-                     rgba(0, 0, 0, 0.1) 0px,
-                     rgba(0, 0, 0, 0.1) 1px,
-                     transparent 1px,
-                     transparent 3px
-                   )`,
-              }}
-            />
-
-            {/* Add holographic snake trail effect */}
-            {snake.map((segment) => (
-              <div key={segment.id} className="absolute z-10" />
-            ))}
-
-            {!hint.length && (
+          {hint.length > 0 && (
+            <div className="absolute top-0 left-0 w-full h-full z-5">
+              {/* Add semi-transparent overlay */}
               <div
-                className="absolute top-0 left-0 w-full h-full"
+                className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
                 style={{
                   backgroundImage: `
-                     linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                     linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
-                   `,
+                       linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+                     `,
                   backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
                 }}
               />
-            )}
 
-            {hint.length > 0 && (
-              <div className="absolute top-0 left-0 w-full h-full z-5">
-                {/* Add semi-transparent overlay */}
-                <div
-                  className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
-                  style={{
-                    backgroundImage: `
-                         linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
-                       `,
-                    backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
-                  }}
+              <svg
+                width={gridSizeX * CELL_SIZE}
+                height={gridSizeY * CELL_SIZE}
+                className="absolute top-0 left-0"
+              >
+                <path
+                  d={hint
+                    .map((pos, i) => {
+                      const x = pos.x * CELL_SIZE + CELL_SIZE / 2;
+                      const y = pos.y * CELL_SIZE + CELL_SIZE / 2;
+                      return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+                    })
+                    .join(" ")}
+                  stroke="hsl(var(--game-snake))"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="square"
+                  strokeDasharray="8 4"
+                  className="animate-dash"
                 />
-
-                <svg
-                  width={gridSizeX * CELL_SIZE}
-                  height={gridSizeY * CELL_SIZE}
-                  className="absolute top-0 left-0"
-                >
-                  <path
-                    d={hint
-                      .map((pos, i) => {
-                        const x = pos.x * CELL_SIZE + CELL_SIZE / 2;
-                        const y = pos.y * CELL_SIZE + CELL_SIZE / 2;
-                        return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-                      })
-                      .join(" ")}
-                    stroke="hsl(var(--game-snake))"
-                    strokeWidth="3"
-                    fill="none"
-                    strokeLinecap="square"
-                    strokeDasharray="8 4"
-                    className="animate-dash"
+                {hint.map((pos, i) => (
+                  <circle
+                    key={i}
+                    cx={pos.x * CELL_SIZE + CELL_SIZE / 2}
+                    cy={pos.y * CELL_SIZE + CELL_SIZE / 2}
+                    r={i === 0 ? 6 : 4}
+                    fill={
+                      i === 0
+                        ? "hsl(var(--game-snake))"
+                        : "hsl(var(--primary))"
+                    }
+                    stroke="var(--background)"
+                    strokeWidth="2"
                   />
-                  {hint.map((pos, i) => (
-                    <circle
-                      key={i}
-                      cx={pos.x * CELL_SIZE + CELL_SIZE / 2}
-                      cy={pos.y * CELL_SIZE + CELL_SIZE / 2}
-                      r={i === 0 ? 6 : 4}
-                      fill={
-                        i === 0
-                          ? "hsl(var(--game-snake))"
-                          : "hsl(var(--primary))"
-                      }
-                      stroke="var(--background)"
-                      strokeWidth="2"
-                    />
-                  ))}
-                  {hint.slice(1).map((pos, i) => (
-                    <text
-                      key={`text-${i}`}
-                      x={pos.x * CELL_SIZE + CELL_SIZE / 2 + 8}
-                      y={pos.y * CELL_SIZE + CELL_SIZE / 2 - 6}
-                      fontSize="12"
-                      fill="hsl(var(--game-snake))"
-                      className="font-pixel bg-background/80 px-1"
-                    >
-                      {i + 1}
-                    </text>
-                  ))}
-                </svg>
-              </div>
-            )}
+                ))}
+                {hint.slice(1).map((pos, i) => (
+                  <text
+                    key={`text-${i}`}
+                    x={pos.x * CELL_SIZE + CELL_SIZE / 2 + 8}
+                    y={pos.y * CELL_SIZE + CELL_SIZE / 2 - 6}
+                    fontSize="12"
+                    fill="hsl(var(--game-snake))"
+                    className="font-pixel bg-background/80 px-1"
+                  >
+                    {i + 1}
+                  </text>
+                ))}
+              </svg>
+            </div>
+          )}
 
-            <Snake segments={snake} />
-            <Food food={food} collectibles={collectibles} />
+          <Snake segments={snake} />
+          <Food food={food} collectibles={collectibles} />
 
-            {gameState !== GameState.PLAYING && (
-              <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
-                {gameState === GameState.READY && (
-                  <div className="flex flex-col items-center text-center">
-                    <h2 className="font-pixel text-2xl text-white mb-2 animate-pulse">
-                      Snake Game
-                    </h2>
-                    <p className="font-pixel text-sm text-white/80 mb-6">
-                      Use arrow keys or touch controls to guide the snake.
-                      <br />
-                      Press &apos;H&apos; for path optimization.
+          {gameState !== GameState.PLAYING && (
+            <div className="absolute top-0 left-0 w-[101%] h-[101%] bg-black/80 bg-opacity-60 z-50 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in">
+              {gameState === GameState.READY && (
+                <div className="flex flex-col items-center text-center">
+                  <h2 className="font-pixel text-2xl text-white mb-2 animate-pulse">
+                    Snake Game
+                  </h2>
+                  <p className="font-pixel text-sm text-white/80 mb-6">
+                    Use arrow keys or touch controls to guide the snake.
+                    <br />
+                    Press &apos;H&apos; for path optimization.
+                  </p>
+                  <PixelButton
+                    onClick={startGame}
+                    size="lg"
+                    className="transform hover:scale-110 transition-transform duration-200"
+                  >
+                    Start Game
+                  </PixelButton>
+                </div>
+              )}
+
+              {gameState === GameState.GAME_OVER && (
+                <div className="text-center animate-pixel-shake">
+                  <h2 className="font-pixel text-3xl text-red-500 mb-4 animate-pulse">
+                    Game Over
+                  </h2>
+                  <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
+                    <p className="font-pixel text-lg text-white mb-2">
+                      Final Score: {stats.score}
                     </p>
+                    {stats.score === stats.highScore && stats.score > 0 && (
+                      <p className="font-pixel text-lg text-yellow-500 animate-bounce">
+                        🏆 New High Score! 🏆
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <p className="text-gray-400 text-sm">Food Eaten</p>
+                        <p className="text-xl font-bold text-white">
+                          {stats.foodEaten}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Coins</p>
+                        <p className="text-xl font-bold text-yellow-400">
+                          {coins}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 justify-center">
                     <PixelButton
                       onClick={startGame}
-                      size="lg"
                       className="transform hover:scale-110 transition-transform duration-200"
                     >
-                      Start Game
+                      Play Again
                     </PixelButton>
                   </div>
-                )}
+                </div>
+              )}
 
-                {gameState === GameState.GAME_OVER && (
-                  <div className="text-center animate-pixel-shake">
-                    <h2 className="font-pixel text-3xl text-red-500 mb-4 animate-pulse">
-                      Game Over
-                    </h2>
-                    <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
-                      <p className="font-pixel text-lg text-white mb-2">
-                        Final Score: {stats.score}
+              {gameState === GameState.WIN && (
+                <div className="text-center">
+                  <h2 className="font-pixel text-3xl text-green-500 mb-4 animate-pulse">
+                    Victory! 🎉
+                  </h2>
+                  <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
+                    <p className="font-pixel text-lg text-white mb-2">
+                      Final Score: {stats.score}
+                    </p>
+                    {stats.score === stats.highScore && (
+                      <p className="font-pixel text-lg text-yellow-500 animate-bounce">
+                        🏆 New High Score! 🏆
                       </p>
-                      {stats.score === stats.highScore && stats.score > 0 && (
-                        <p className="font-pixel text-lg text-yellow-500 animate-bounce">
-                          🏆 New High Score! 🏆
+                    )}
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <p className="text-gray-400 text-sm">Food Eaten</p>
+                        <p className="text-xl font-bold text-white">
+                          {stats.foodEaten}
                         </p>
-                      )}
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                          <p className="text-gray-400 text-sm">Food Eaten</p>
-                          <p className="text-xl font-bold text-white">
-                            {stats.foodEaten}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 text-sm">Coins</p>
-                          <p className="text-xl font-bold text-yellow-400">
-                            {coins}
-                          </p>
-                        </div>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Coins</p>
+                        <p className="text-xl font-bold text-yellow-400">
+                          {coins}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex gap-4 justify-center">
-                      <PixelButton
-                        onClick={startGame}
-                        className="transform hover:scale-110 transition-transform duration-200"
-                      >
-                        Play Again
-                      </PixelButton>
-                    </div>
                   </div>
-                )}
-
-                {gameState === GameState.WIN && (
-                  <div className="text-center">
-                    <h2 className="font-pixel text-3xl text-green-500 mb-4 animate-pulse">
-                      Victory! 🎉
-                    </h2>
-                    <div className="bg-gray-900/80 p-6 rounded-lg mb-6">
-                      <p className="font-pixel text-lg text-white mb-2">
-                        Final Score: {stats.score}
-                      </p>
-                      {stats.score === stats.highScore && (
-                        <p className="font-pixel text-lg text-yellow-500 animate-bounce">
-                          🏆 New High Score! 🏆
-                        </p>
-                      )}
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                          <p className="text-gray-400 text-sm">Food Eaten</p>
-                          <p className="text-xl font-bold text-white">
-                            {stats.foodEaten}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 text-sm">Coins</p>
-                          <p className="text-xl font-bold text-yellow-400">
-                            {coins}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-4 justify-center">
-                      <PixelButton
-                        onClick={startGame}
-                        className="transform hover:scale-110 transition-transform duration-200"
-                      >
-                        Play Again
-                      </PixelButton>
-                    </div>
+                  <div className="flex gap-4 justify-center">
+                    <PixelButton
+                      onClick={startGame}
+                      className="transform hover:scale-110 transition-transform duration-200"
+                    >
+                      Play Again
+                    </PixelButton>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-          <div className="mt-4">
+        <div className="mt-4">
+          <PixelButton
+            onClick={calculateHint}
+            disabled={
+              gameState !== GameState.PLAYING ||
+              (food.length === 0 &&
+                collectibles.length === 0 &&
+                !hintActiveRef.current)
+            }
+            variant={hintActiveRef.current ? "primary" : "secondary"}
+            className="w-full transform hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-xl"
+          >
+            <Lightbulb size={16} className="mr-2" />
+            {hintActiveRef.current
+              ? "Disable Path Optimization"
+              : "Optimize Path (TSP)"}
+          </PixelButton>
+        </div>
+
+        <div className="md:hidden mt-6">
+          <div className="flex flex-col items-center gap-3">
             <PixelButton
-              onClick={calculateHint}
-              disabled={
-                gameState !== GameState.PLAYING ||
-                (food.length === 0 &&
-                  collectibles.length === 0 &&
-                  !hintActiveRef.current)
-              }
-              variant={hintActiveRef.current ? "primary" : "secondary"}
-              className="w-full transform hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-xl"
+              onClick={() => handleDirectionButton(Direction.UP)}
+              className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
+              disabled={gameState !== GameState.PLAYING}
             >
-              <Lightbulb size={16} className="mr-2" />
-              {hintActiveRef.current
-                ? "Disable Path Optimization"
-                : "Optimize Path (TSP)"}
+              <ChevronUp size={24} />
             </PixelButton>
-          </div>
 
-          <div className="md:hidden mt-6">
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex gap-3">
               <PixelButton
-                onClick={() => handleDirectionButton(Direction.UP)}
+                onClick={() => handleDirectionButton(Direction.LEFT)}
                 className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
                 disabled={gameState !== GameState.PLAYING}
               >
-                <ChevronUp size={24} />
+                <ChevronLeft size={24} />
               </PixelButton>
 
-              <div className="flex gap-3">
-                <PixelButton
-                  onClick={() => handleDirectionButton(Direction.LEFT)}
-                  className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-                  disabled={gameState !== GameState.PLAYING}
-                >
-                  <ChevronLeft size={24} />
-                </PixelButton>
+              <PixelButton
+                onClick={() => handleDirectionButton(Direction.DOWN)}
+                className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
+                disabled={gameState !== GameState.PLAYING}
+              >
+                <ChevronDown size={24} />
+              </PixelButton>
 
-                <PixelButton
-                  onClick={() => handleDirectionButton(Direction.DOWN)}
-                  className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-                  disabled={gameState !== GameState.PLAYING}
-                >
-                  <ChevronDown size={24} />
-                </PixelButton>
-
-                <PixelButton
-                  onClick={() => handleDirectionButton(Direction.RIGHT)}
-                  className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-                  disabled={gameState !== GameState.PLAYING}
-                >
-                  <ChevronRight size={24} />
-                </PixelButton>
-              </div>
+              <PixelButton
+                onClick={() => handleDirectionButton(Direction.RIGHT)}
+                className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
+                disabled={gameState !== GameState.PLAYING}
+              >
+                <ChevronRight size={24} />
+              </PixelButton>
             </div>
           </div>
         </div>
