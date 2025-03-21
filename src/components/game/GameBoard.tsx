@@ -212,24 +212,19 @@ const GameBoard: React.FC = () => {
   }, [gameState, initGame]);
 
   const gameOver = useCallback(async (message = "") => {
+    let submissionStatus: 'new_high' | 'submitted' | 'not_submitted' = 'not_submitted';
+    
     if (useSessionStore.getState().hasValidName) {
-      await LeaderboardService.submitScore(stats.score, stats.level);
-    }
-    setGameState(GameState.GAME_OVER);
-    if (message) {
-      toast.error(message);
+      submissionStatus = await LeaderboardService.submitScore(stats.score, stats.level);
     }
 
-    try {
-      // Submit score only if valid name exists
-      if (useSessionStore.getState().hasValidName) {
-        const success = await LeaderboardService.submitScore(stats.score, stats.level);
-        if (success) {
-          toast.success("Score submitted to leaderboard!");
-        }
-      }
-    } catch {
-      toast.error("Failed to submit score");
+    setGameState(GameState.GAME_OVER);
+    if (message) toast.error(message);
+
+    if (submissionStatus === 'new_high') {
+      toast.success("New high score submitted to leaderboard! 🏆");
+    } else if (submissionStatus === 'submitted') {
+        toast.success("Score submitted to leaderboard!");
     }
 
     // Update high score logic
@@ -661,27 +656,30 @@ const GameBoard: React.FC = () => {
 
   // Update the useEffect for leaderboard
   useEffect(() => {
+    const abortController = new AbortController();
     let intervalId: NodeJS.Timeout;
-    
+
     const loadLeaderboard = async () => {
       try {
         const scores = await LeaderboardService.getTopScores(5);
-        setTopScores(scores);
-      } catch {
-        // Silent fail for real-time updates
+        if (!abortController.signal.aborted) {
+          setTopScores(scores);
+        }
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          console.error("Leaderboard load failed:", error);
+        }
       }
     };
 
-    // Load immediately on component mount
-    loadLeaderboard();
-    
-    // Refresh every 10 seconds
+      loadLeaderboard();
     intervalId = setInterval(loadLeaderboard, 10000);
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      abortController.abort();
+      clearInterval(intervalId);
     };
-  }, []); // Empty dependency array to run once on mount
+  }, []);
 
   // Move the hook call to the top level of the component
   const guestName = useSessionStore((state) => state.guestName);
@@ -703,12 +701,12 @@ const GameBoard: React.FC = () => {
           </button>
         </div>
         <div className="space-y-1">
-          {topScores.map((entry, index) => (
+          {topScores.map((entry) => (
             <div 
-              key={entry.id} 
-              className="flex justify-between items-center bg-gray-900/30 rounded-sm"
+              key={entry.id}
+              className="flex justify-between items-center bg-gray-900/30 p-1 rounded-sm"
             >
-              <span className="font-pixel text-white/70 text-xxs">#{index + 1}</span>
+              <span className="font-pixel text-white/70 text-xxs">#{entry.rank}</span>
               <span className=" text-white/90 text-xxs truncate max-w-[80px]">
                 {entry.username}
               </span>

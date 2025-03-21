@@ -6,30 +6,47 @@ export type LeaderboardEntry = {
   score: number;
   level: number;
   username: string;
+  user_id: string;
   created_at: string;
+  rank?: number;
 };
 
 export const LeaderboardService = {
   getTopScores: async (limit = 10): Promise<LeaderboardEntry[]> => {
     const { data, error } = await supabase
       .from('scores')
-      .select('id, score, level, username, created_at')
-      .order('score', { ascending: false })
-      .limit(limit);
+      .select('id, score, level, username, user_id, created_at')
+      .order('score', { ascending: false });
 
-    if (error) {
-      console.error("Error fetching leaderboard:", JSON.stringify(error, null, 2));
-      return [];
-    }
-    return data as LeaderboardEntry[];
+    if (error) return [];
+
+    // Add ranking and ensure unique users
+    const rankedEntries = Array.from(
+      data.reduce((map, entry) => {
+        if (!map.has(entry.user_id) || entry.score > map.get(entry.user_id)!.score) {
+          map.set(entry.user_id, entry);
+        }
+        return map;
+      }, new Map<string, LeaderboardEntry>()).values()
+    )
+    .sort((a, b) => b.score - a.score)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+    return rankedEntries.slice(0, limit);
   },
 
-  submitScore: async (score: number, level: number): Promise<boolean> => {
+  submitScore: async (score: number, level: number): Promise<'new_high' | 'submitted' | 'not_submitted'> => {
     const { guestName, hasValidName } = useSessionStore.getState();
     
     if (!hasValidName) {
-      console.error("Cannot submit score without valid name");
-      return false;
+      return 'not_submitted';
+    }
+
+    const userId = (await supabase.auth.getUser()).data.user?.id || 'guest';
+    const currentBest = await LeaderboardService.getUserBest();
+
+    if (score <= currentBest) {
+      return 'not_submitted';
     }
 
     const { error } = await supabase
@@ -38,14 +55,14 @@ export const LeaderboardService = {
         score,
         level,
         username: guestName,
-        user_id: (await supabase.auth.getUser()).data.user?.id || 'guest'
+        user_id: userId
       }]);
 
     if (error) {
-      console.error("Score submission failed:", error);
-      return false;
+      return 'not_submitted';
     }
-    return true;
+    
+    return userId === 'guest' ? 'submitted' : 'new_high';
   },
 
   getUserBest: async (): Promise<number> => {
