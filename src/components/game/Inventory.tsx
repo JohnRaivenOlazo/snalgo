@@ -3,7 +3,6 @@ import {
   InventoryItem,
   CollectibleType,
 } from "@/components/game/utils/types";
-import PixelatedContainer from "../ui/PixelatedContainer";
 import PixelButton from "../ui/PixelButton";
 import {
   ArrowUpDown,
@@ -24,6 +23,7 @@ import {
 } from "@/components/game/utils/algorithms";
 import { useGameStore } from "@/stores/useGameStore";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface InventoryProps {
   items: InventoryItem[];
@@ -31,12 +31,14 @@ interface InventoryProps {
   currentWeight: number;
   totalValue: number;
   onDeleteItem: (itemId: string) => void;
+  className?: string;
 }
 
 const Inventory: React.FC<InventoryProps> = ({
   items,
   currentWeight,
   totalValue,
+  className
 }) => {
   const { capacity } = useGameStore();
 
@@ -177,26 +179,22 @@ const Inventory: React.FC<InventoryProps> = ({
       : filteredItems;
 
   return (
-    <PixelatedContainer
-      className="w-full h-full flex flex-col gap-2 mt-4 md:mt-0 relative overflow-hidden"
-      glowEffect={true}
-      variant="elevated"
+    <div 
+      className={cn("w-full h-full flex flex-col gap-2 mt-4 md:mt-0 relative overflow-hidden p-4", className)}
     >
-      <div className="flex items-center justify-between border-b border-game-border pb-2">
-        <div className="flex items-center gap-2">
-          <Package size={14} className="text-primary animate-pulse" />
-          <h3 className="font-pixel text-xs md:text-sm text-white">
-            Inventory
-          </h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="text-xs font-pixel text-white relative">
-            <span className="animate-pulse-glow px-1.5 py-0.5 rounded">
-              {currentWeight}/{capacity}
-            </span>
+              <div className="col-span-2 p-3 bg-black/30 rounded-sm border border-white/5">
+          <div className="flex justify-between text-xs font-pixel text-white/70 mb-2">
+            <span>INVENTORY</span>
+            <span>{currentWeight}/{useGameStore.getState().capacity}kg</span>
+          </div>
+          <div className="relative h-2 bg-black/50 rounded-full overflow-hidden">
+            <div 
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500"
+              style={{ width: `${(currentWeight / useGameStore.getState().capacity) * 100}%` }}
+            />
+            <div className="absolute inset-0 bg-noise-texture opacity-20" />
           </div>
         </div>
-      </div>
 
       <div className="flex flex-wrap gap-2 mt-2">
         <div className="flex items-center gap-2">
@@ -368,7 +366,7 @@ const Inventory: React.FC<InventoryProps> = ({
         />
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMCAwaDQwdjRIMHoiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==')]"></div>
       </div>
-    </PixelatedContainer>
+    </div>
   );
 };
 

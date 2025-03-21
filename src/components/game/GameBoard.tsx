@@ -699,48 +699,151 @@ const GameBoard: React.FC = () => {
 
   const guestName = useSessionStore((state) => state.guestName);
 
-  return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-2">
-      <div className="relative bg-black/20 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="font-pixel text-white/80 text-xs">Top Players</h3>
-          <button
-            onClick={async () => {
-              await LeaderboardService.getTopScores(10).then(setTopScores);
-              toast.success("Leaderboard refreshed!");
-            }}
-            className="text-white/60 hover:text-white/90 transition-colors"
-            title="Refresh leaderboard"
+  // Update leaderboard section
+  const LeaderboardSection = () => (
+    <div className="relative bg-gradient-to-br from-gray-900/80 to-gray-800/90 backdrop-blur-lg rounded-lg p-3 shadow-2xl border-2 border-white/10">
+      <div className="absolute inset-0 bg-noise-texture opacity-20 pointer-events-none" />
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-pixel text-white/90 text-sm tracking-wider flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-yellow-400" />
+          LEADERBOARD
+        </h3>
+        <button
+          onClick={async () => {
+            await LeaderboardService.getTopScores(10).then(setTopScores);
+            toast.success("Leaderboard refreshed!");
+          }}
+          className="text-white/70 hover:text-white/100 transition-all group"
+          title="Refresh leaderboard"
+        >
+          <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+        </button>
+      </div>
+      <div className="space-y-2 sm:max-h-full max-h-[300px] overflow-y-auto scrollbar-style">
+        {topScores.map((entry) => (
+          <div
+            key={entry.id}
+            className="relative bg-gradient-to-r from-gray-800/50 to-gray-900/30 p-2 rounded-md 
+                     border border-white/5 hover:border-primary/50 transition-all group"
           >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="space-y-1 sm:max-h-full max-h-[300px] overflow-y-auto">
-          {topScores.map((entry) => (
-            <div
-              key={entry.id}
-              className="flex justify-between items-center bg-gray-900/30 p-1 rounded-sm"
-            >
-              <div className="flex justify-center text-center items-center gap-0.5">
-                <span className="font-pixel text-white/70 text-xxs">
-                  #{entry.rank}
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <span className="font-pixel text-white/80 text-xs w-6 text-center">
+                  {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `#${entry.rank}`}
                 </span>
-                <span className=" text-white/60 text-xxs truncate max-w-[80px] mb-1">
+                <span className="text-white/80 text-xs font-pixel truncate max-w-[100px]">
                   {entry.username}
                 </span>
               </div>
-              <div className="flex flex-col items-center">
-                <span className="font-pixel text-yellow-300/90 text-[10px]">
-                  Lv.{entry.level}
+              <div className="flex flex-col items-end">
+                <span className="font-pixel text-yellow-300/90 text-[11px] leading-none mb-1">
+                  LV.{entry.level}
                 </span>
-                <span className="font-pixel text-green-300/90 text-[15px]">
+                <span className="font-pixel text-green-400/90 text-sm bg-black/30 px-2 py-1 rounded-sm">
                   {entry.score.toLocaleString()}
                 </span>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Enhanced stats display
+  const StatsDisplay = () => (
+    <PixelatedContainer className="p-4 bg-gradient-to-br from-gray-900/80 to-gray-800/90 backdrop-blur-sm">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center gap-3 p-2 bg-black/20 rounded-sm border border-white/5">
+          <div className="relative">
+            <Star className="text-yellow-400 w-6 h-6 animate-pulse-slow" />
+            <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-[6px]" />
+          </div>
+          <div>
+            <p className="font-pixel text-xs text-white/70 mb-1">SCORE</p>
+            <p className="font-pixel text-lg text-yellow-400">{stats.score}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3 p-2 bg-black/20 rounded-sm border border-white/5">
+          <div className="relative">
+            <Trophy className="text-purple-400 w-6 h-6 animate-bounce-slow" />
+            <div className="absolute inset-0 bg-purple-400/20 rounded-full blur-[6px]" />
+          </div>
+          <div>
+            <p className="font-pixel text-xs text-white/70 mb-1">LEVEL</p>
+            <p className="font-pixel text-lg text-purple-400">{stats.level}</p>
+          </div>
         </div>
       </div>
+    </PixelatedContainer>
+  );
+
+  // Enhanced inventory section
+  const InventorySection = () => (
+    <div className="relative group">
+      <div className="absolute inset-0 bg-primary/5 blur-xl opacity-30 animate-pulse-slow" />
+      <Inventory
+        items={useMemo(
+          () => inventory.filter((item) =>
+            Object.values(CollectibleType).includes(item.type as CollectibleType)
+          ),
+          []
+        )}
+        capacity={useGameStore.getState().capacity}
+        currentWeight={stats.inventoryCurrentWeight}
+        totalValue={stats.totalValue}
+        onDeleteItem={handleDeleteInventoryItem}
+        className="border-2 border-white/10 bg-gradient-to-br from-gray-900/80 to-gray-800/90"
+      />
+    </div>
+  );
+
+  // Updated mobile controls with haptic feedback and larger touch targets
+  const MobileControls = () => (
+    <div className="md:hidden mt-6 fixed bottom-4 left-0 right-0 px-4">
+      <div className="relative bg-black/30 backdrop-blur-lg rounded-2xl p-2 shadow-2xl">
+        <div className="grid grid-cols-3 gap-2 items-center justify-center">
+          <div className="col-start-2 flex justify-center">
+            <PixelButton
+              onClick={() => {
+                navigator.vibrate?.(50);
+                handleDirectionButton(Direction.UP);
+              }}
+              className="w-20 h-20 active:scale-90 transition-transform"
+              variant="glow"
+            >
+              <ChevronUp size={32} />
+            </PixelButton>
+          </div>
+          
+          <div className="col-span-3 flex justify-between mt-2">
+            {[Direction.LEFT, Direction.DOWN, Direction.RIGHT].map((dir) => (
+              <PixelButton
+                key={dir}
+                onClick={() => {
+                  navigator.vibrate?.(30);
+                  handleDirectionButton(dir);
+                }}
+                className="w-20 h-20 active:scale-90 transition-transform"
+                variant="secondary"
+              >
+                {dir === Direction.LEFT && <ChevronLeft size={32} />}
+                {dir === Direction.DOWN && <ChevronDown size={32} />}
+                {dir === Direction.RIGHT && <ChevronRight size={32} />}
+              </PixelButton>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-noise-texture">
+      <LeaderboardSection />
+      
       <div
         className="md:col-span-2 relative"
         style={{ height: "70vh", maxHeight: "800px" }}
@@ -875,7 +978,7 @@ const GameBoard: React.FC = () => {
                 {/* Main Collectible */}
                 <div
                   className="w-[90%] h-[90%] rounded-lg  
-                           shadow-pixel transform transition-all flex items-center justify-center
+                           transform transition-all flex items-center justify-center
                            group-hover:scale-110 group-hover:brightness-110"
                 >
                   {/* Value/Weight Badge */}
@@ -996,8 +1099,15 @@ const GameBoard: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
 
-        <div className="mt-4">
+      <div className="md:col-span-1 flex flex-col gap-4">
+        <StatsDisplay />
+        <InventorySection />
+        
+        {/* Enhanced Hint Button */}
+        <div className="mt-4 relative group">
+          <div className="absolute inset-0 bg-primary/10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
           <PixelButton
             onClick={calculateHint}
             disabled={
@@ -1006,115 +1116,23 @@ const GameBoard: React.FC = () => {
                 collectibles.length === 0 &&
                 !hintActiveRef.current)
             }
-            variant={hintActiveRef.current ? "primary" : "secondary"}
-            className="w-full transform hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-xl"
+            variant={hintActiveRef.current ? 'glow' : 'default'}
+            className="w-full transform hover:scale-105 transition-transform 
+                     duration-300 shadow-2xl hover:shadow-primary/30
+                     border-2 border-white/10 bg-gradient-to-br from-gray-900 to-gray-800"
           >
-            <Lightbulb size={16} className="mr-2" />
-            {hintActiveRef.current
-              ? "Disable Path Optimization"
-              : "Optimize Path (TSP)"}
+            <Lightbulb size={18} className="mr-2 text-yellow-400" />
+            <span className="font-pixel text-sm">
+              {hintActiveRef.current ? 'ACTIVE PATHING' : 'OPTIMIZE ROUTE'}
+            </span>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            </div>
           </PixelButton>
         </div>
-
-        <div className="md:hidden mt-6">
-          <div className="flex flex-col items-center gap-3">
-            <PixelButton
-              onClick={() => handleDirectionButton(Direction.UP)}
-              className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-              disabled={gameState !== GameState.PLAYING}
-            >
-              <ChevronUp size={24} />
-            </PixelButton>
-
-            <div className="flex gap-3">
-              <PixelButton
-                onClick={() => handleDirectionButton(Direction.LEFT)}
-                className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-                disabled={gameState !== GameState.PLAYING}
-              >
-                <ChevronLeft size={24} />
-              </PixelButton>
-
-              <PixelButton
-                onClick={() => handleDirectionButton(Direction.DOWN)}
-                className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-                disabled={gameState !== GameState.PLAYING}
-              >
-                <ChevronDown size={24} />
-              </PixelButton>
-
-              <PixelButton
-                onClick={() => handleDirectionButton(Direction.RIGHT)}
-                className="w-14 h-14 flex items-center justify-center p-0 transform hover:scale-110 transition-transform duration-200 shadow-lg hover:shadow-xl"
-                disabled={gameState !== GameState.PLAYING}
-              >
-                <ChevronRight size={24} />
-              </PixelButton>
-            </div>
-          </div>
-        </div>
       </div>
-      <div className="md:col-span-1 flex flex-col gap-4">
-        <PixelatedContainer className="p-4 flex flex-col gap-4">
-          <div className="grid grid-cols-4 gap-4 mt-2">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Star className="text-yellow-500" size={16} />
-                <span className="font-pixel text-[10px] text-white">Score</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {stats.score}
-              </span>
-            </div>
 
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Trophy className="text-yellow-500" size={16} />
-                <span className="font-pixel text-[10px] text-white">Lvl</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {stats.level}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Trophy className="text-yellow-500" size={16} />
-                <span className="font-pixel text-[10px] text-white">Length</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {Math.max(snake.length - 3, 0)}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <Trophy className="text-yellow-500" size={16} />
-                <span className="font-pixel text-[10px] text-white">Best</span>
-              </div>
-              <span className="font-pixel text-lg text-white mt-1">
-                {stats.highScore}
-              </span>
-            </div>
-          </div>
-        </PixelatedContainer>
-
-        <Inventory
-          items={useMemo(
-            () =>
-              inventory.filter((item) =>
-                Object.values(CollectibleType).includes(
-                  item.type as CollectibleType
-                )
-              ),
-            [inventory] // Only recompute when inventory changes
-          )}
-          capacity={useGameStore.getState().capacity}
-          currentWeight={stats.inventoryCurrentWeight}
-          totalValue={stats.totalValue}
-          onDeleteItem={handleDeleteInventoryItem}
-        />
-      </div>
+      <MobileControls />
     </div>
   );
 };
