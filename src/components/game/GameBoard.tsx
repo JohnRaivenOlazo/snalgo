@@ -1056,11 +1056,11 @@ const GameBoard: React.FC = () => {
       </div>
       <div className="md:col-span-1 flex flex-col gap-4">
         <PixelatedContainer className="p-4 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4 mt-2">
+          <div className="grid grid-cols-4 gap-4 mt-2">
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1">
                 <Star className="text-yellow-500" size={16} />
-                <span className="font-pixel text-xs text-white">Score</span>
+                <span className="font-pixel text-[10px] text-white">Score</span>
               </div>
               <span className="font-pixel text-lg text-white mt-1">
                 {stats.score}
@@ -1070,7 +1070,27 @@ const GameBoard: React.FC = () => {
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1">
                 <Trophy className="text-yellow-500" size={16} />
-                <span className="font-pixel text-xs text-white">Best</span>
+                <span className="font-pixel text-[10px] text-white">Lvl</span>
+              </div>
+              <span className="font-pixel text-lg text-white mt-1">
+                {stats.level}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <Trophy className="text-yellow-500" size={16} />
+                <span className="font-pixel text-[10px] text-white">Length</span>
+              </div>
+              <span className="font-pixel text-lg text-white mt-1">
+                {Math.max(snake.length - 3, 0)}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <Trophy className="text-yellow-500" size={16} />
+                <span className="font-pixel text-[10px] text-white">Best</span>
               </div>
               <span className="font-pixel text-lg text-white mt-1">
                 {stats.highScore}
@@ -1094,31 +1114,6 @@ const GameBoard: React.FC = () => {
           totalValue={stats.totalValue}
           onDeleteItem={handleDeleteInventoryItem}
         />
-
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <p className="text-gray-400 text-sm">Level</p>
-            <p className="text-xl font-bold text-white">{stats.level}</p>
-          </div>
-          <div>
-            <p className="text-gray-400 text-sm">Snake Length</p>
-            <p className="text-xl font-bold text-white">
-              {Math.max(snake.length - 3, 0)}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400 text-sm">Collectibles</p>
-            <p className="text-xl font-bold text-white">
-              {stats.collectiblesCollected}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400 text-sm">Total Weight</p>
-            <p className="text-xl font-bold text-yellow-400">
-              {stats.totalWeight}
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

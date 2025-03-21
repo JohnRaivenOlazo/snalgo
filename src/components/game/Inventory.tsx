@@ -261,7 +261,7 @@ const Inventory: React.FC<InventoryProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/20">
+      <div className="flex justify-between items-center mt-4 pt-0">
         <div className="flex items-center gap-2">
           <Lightbulb className="text-green-400" size={16} />
           <span className="font-pixel text-sm text-white">Total Value</span>
