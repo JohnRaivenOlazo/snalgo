@@ -891,7 +891,7 @@ const GameBoard: React.FC = () => {
   );
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 md:p-4 bg-noise-texture">
+    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 px-0 md:p-4 bg-noise-texture">
       <LeaderboardSection />
       
       <div
@@ -900,7 +900,7 @@ const GameBoard: React.FC = () => {
       >
         <div
           ref={boardRef}
-          className="relative bg-grid-pattern mx-auto"
+          className="relative bg-grid-pattern mx-auto my-4"
           style={{
             width: `${gridSizeX * CELL_SIZE}px`,
             height: `${gridSizeY * CELL_SIZE}px`,
@@ -1053,7 +1053,7 @@ const GameBoard: React.FC = () => {
           ))}
 
           {gameState !== GameState.PLAYING && (
-            <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center">
+            <div className="absolute -inset-4 z-50 bg-black/98 backdrop-blur-3xl flex items-center justify-center overflow-hidden rounded-none">
               {/* Animated background particles */}
               <div className="absolute inset-0 overflow-hidden">
                 {Array.from({ length: 50 }).map((_, i) => (
