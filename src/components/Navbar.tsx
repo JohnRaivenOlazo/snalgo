@@ -2,14 +2,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store, HelpCircle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 
 const Navbar = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Store', href: '/store', icon: Store },
     { name: 'Help', href: '/help', icon: HelpCircle },
   ];
 

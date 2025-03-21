@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  InventoryProps,
   InventoryItem,
   CollectibleType,
 } from "@/components/game/utils/types";
@@ -36,7 +35,6 @@ interface InventoryProps {
 const Inventory: React.FC<InventoryProps> = ({
   items,
   currentWeight,
-  onDeleteItem,
   totalValue,
 }) => {
   const { capacity } = useGameStore();
@@ -166,7 +164,7 @@ const Inventory: React.FC<InventoryProps> = ({
 
   return (
     <PixelatedContainer
-      className="w-full h-full flex flex-col gap-4 mt-4 md:mt-0 relative overflow-hidden"
+      className="w-full h-full flex flex-col gap-2 mt-4 md:mt-0 relative overflow-hidden"
       glowEffect={true}
       variant="elevated"
     >
@@ -177,8 +175,7 @@ const Inventory: React.FC<InventoryProps> = ({
             Inventory
           </h3>
         </div>
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-[10px] font-pixel text-white">Capacity</span>
+        <div className="flex items-center gap-2">
           <div className="text-xs font-pixel text-white relative">
             <span className="animate-pulse-glow px-1.5 py-0.5 rounded">
               {currentWeight}/{capacity}
@@ -324,20 +321,6 @@ const Inventory: React.FC<InventoryProps> = ({
                       </span>
                       <span className="text-[10px]">{item.weight}</span>
                     </div>
-                    {onDeleteItem && (
-                      <PixelButton
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => onDeleteItem(item.id)}
-                        className="p-1 ml-1 flex items-center group-hover:animate-pulse"
-                        title="Sell for coins"
-                      >
-                        <Coins size={10} className="text-yellow-500" />
-                        <span className="text-[8px] ml-1">
-                          {item.sellValue}
-                        </span>
-                      </PixelButton>
-                    )}
                   </div>
                 </div>
               );

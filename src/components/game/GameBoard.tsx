@@ -90,7 +90,7 @@ const GameBoard: React.FC = () => {
   const directionQueue = useRef<Direction[]>([]);
   const directionRef = useRef(direction);
 
-  const { addCoins, coins } = useGameStore();
+  const { addCoins, coins, upgradeInventoryCapacity } = useGameStore();
 
   const currentWeightRef = useRef(stats.inventoryCurrentWeight);
   useEffect(() => {
@@ -142,6 +142,8 @@ const GameBoard: React.FC = () => {
   }, [updateGridSize]);
 
   const initGame = useCallback(() => {
+    useGameStore.getState().reset();
+    
     if (gridSizeX < 10 || gridSizeY < 10) return;
 
     const initialSnake = createInitialSnake(gridSizeX, gridSizeY);
@@ -300,7 +302,8 @@ const GameBoard: React.FC = () => {
       inventoryCurrentWeight: 0
     }));
     setInventory([]);
-  }, [stats.level, gridSizeX, gridSizeY, snake]);
+    upgradeInventoryCapacity();
+  }, [stats.level, upgradeInventoryCapacity, snake, gridSizeX, gridSizeY]);
   
   const updateHintPath = useCallback(
     (head: Position) => {
@@ -331,7 +334,7 @@ const GameBoard: React.FC = () => {
     const totalWeight = inventory.reduce((sum, item) => sum + item.weight, 0);
 
     // Immediate weight check before processing movement
-    if (totalWeight > currentThreshold) {
+    if (totalWeight >= useGameStore.getState().capacity) {
       gameOver(`Capacity exceeded! (${totalWeight}/${currentThreshold})`);
       return;
     }

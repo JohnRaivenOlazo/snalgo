@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MAX_STOMACH_CAPACITY, BASE_WEIGHT_THRESHOLD } from '@/components/game/utils/gameLogic';
+import { BASE_WEIGHT_THRESHOLD } from '@/components/game/utils/gameLogic';
 import { Collectible } from '@/components/game/utils/types';
 
 interface GameState {
@@ -10,6 +10,7 @@ interface GameState {
   setCapacity: (capacity: number) => void;
   reset: () => void;
   collectibles: Collectible[];
+  upgradeInventoryCapacity: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -23,6 +24,12 @@ export const useGameStore = create<GameState>((set) => ({
     coins: state.coins + amount
   })),
   setCapacity: (capacity) => set({ capacity }),
-  reset: () => set({ coins: 0, capacity: MAX_STOMACH_CAPACITY }),
-  collectibles: []
+  reset: () => set({ 
+    coins: 0, 
+    capacity: BASE_WEIGHT_THRESHOLD
+  }),
+  collectibles: [],
+  upgradeInventoryCapacity: () => set((state) => ({ 
+    capacity: state.capacity + 10 
+  })),
 })); 
