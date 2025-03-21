@@ -685,10 +685,10 @@ const GameBoard: React.FC = () => {
   const guestName = useSessionStore((state) => state.guestName);
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-2">
       <div className="relative bg-black/20 backdrop-blur-sm rounded-lg p-2 shadow-lg">
         <div className="flex justify-between items-center mb-1">
-          <h3 className="font-pixel text-white/80 text-xs">TOP 10 PLAYERS</h3>
+          <h3 className="font-pixel text-white/80 text-xs">Top Players</h3>
           <button 
             onClick={() => {
               LeaderboardService.getTopScores(10)
@@ -701,18 +701,20 @@ const GameBoard: React.FC = () => {
             <RefreshCw className="h-3 w-3" />
           </button>
         </div>
-        <div className="space-y-1 max-h-[300px] overflow-y-auto">
+        <div className="space-y-1 sm:max-h-full max-h-[300px] overflow-y-auto">
           {topScores.map((entry) => (
             <div 
               key={entry.id}
               className="flex justify-between items-center bg-gray-900/30 p-1 rounded-sm"
             >
-              <span className="font-pixel text-white/70 text-xxs">#{entry.rank}</span>
-              <span className=" text-white/90 text-xxs truncate max-w-[80px]">
-                {entry.username}
-              </span>
+              <div className="flex justify-center text-center items-center">
+                <span className="font-pixel text-white/70 text-xxs">#{entry.rank}</span>
+                <span className=" text-white/90 text-xxs truncate max-w-[80px]">
+                  {entry.username}
+                </span>
+              </div>
               <div className="flex flex-col items-end">
-                <span className="font-pixel text-yellow-300/90 text-xxs">
+                <span className="font-pixel text-yellow-300/90 text-[10px]">
                   Lv.{entry.level}
                 </span>
                 <span className="font-pixel text-green-300/90 text-xxs">
