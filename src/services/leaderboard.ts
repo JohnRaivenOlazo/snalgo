@@ -16,23 +16,26 @@ export const LeaderboardService = {
     const { data, error } = await supabase
       .from('scores')
       .select('id, score, level, username, user_id, created_at')
+      .order('created_at', { ascending: false })
       .order('score', { ascending: false });
 
     if (error) return [];
 
-    // Add ranking and ensure unique users
-    const rankedEntries = Array.from(
-      data.reduce((map, entry) => {
-        if (!map.has(entry.user_id) || entry.score > map.get(entry.user_id)!.score) {
-          map.set(entry.user_id, entry);
-        }
-        return map;
-      }, new Map<string, LeaderboardEntry>()).values()
-    )
-    .sort((a, b) => b.score - a.score)
-    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+    const entries = data.reduce((acc, entry) => {
+      const key = entry.user_id === 'guest' 
+        ? `guest-${entry.username}` 
+        : entry.user_id;
 
-    return rankedEntries.slice(0, limit);
+      if (!acc.has(key) || entry.score > acc.get(key)!.score) {
+        acc.set(key, entry);
+      }
+      return acc;
+    }, new Map<string, LeaderboardEntry>());
+
+    return Array.from(entries.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map((entry, index) => ({ ...entry, rank: index + 1 }));
   },
 
   submitScore: async (score: number, level: number): Promise<'new_high' | 'submitted' | 'not_submitted'> => {

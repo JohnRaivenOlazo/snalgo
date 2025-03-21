@@ -661,7 +661,7 @@ const GameBoard: React.FC = () => {
 
     const loadLeaderboard = async () => {
       try {
-        const scores = await LeaderboardService.getTopScores(5);
+        const scores = await LeaderboardService.getTopScores(10);
         if (!abortController.signal.aborted) {
           setTopScores(scores);
         }
@@ -672,7 +672,7 @@ const GameBoard: React.FC = () => {
       }
     };
 
-      loadLeaderboard();
+    loadLeaderboard();
     intervalId = setInterval(loadLeaderboard, 10000);
 
     return () => {
@@ -688,11 +688,12 @@ const GameBoard: React.FC = () => {
     <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="relative bg-black/20 backdrop-blur-sm rounded-lg p-2 shadow-lg">
         <div className="flex justify-between items-center mb-1">
-          <h3 className="font-pixel text-white/80 text-xs">TOP PLAYERS</h3>
+          <h3 className="font-pixel text-white/80 text-xs">TOP 10 PLAYERS</h3>
           <button 
             onClick={() => {
-              LeaderboardService.getTopScores(5)
-                .then(setTopScores);
+              LeaderboardService.getTopScores(10)
+                .then(setTopScores)
+                .catch(console.error);
             }}
             className="text-white/60 hover:text-white/90 transition-colors"
             title="Refresh leaderboard"
@@ -700,7 +701,7 @@ const GameBoard: React.FC = () => {
             <RefreshCw className="h-3 w-3" />
           </button>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 max-h-[300px] overflow-y-auto">
           {topScores.map((entry) => (
             <div 
               key={entry.id}
