@@ -899,8 +899,8 @@ const GameBoard: React.FC = () => {
                 <div className="flex flex-col items-center text-center">
                   <input
                     type="text"
-                    placeholder="Enter your name"
-                    className="font-pixel mb-4 p-2 bg-black/50 text-white border-2 border-white/30 rounded-md focus:outline-none focus:border-primary"
+                    placeholder="Enter your name..."
+                    className="font-pixel mb-4 p-2 bg-black/50 text-white text-center border-2 border-white/30 rounded-md focus:outline-none focus:border-primary"
                     value={guestName}
                     onChange={(e) => useSessionStore.getState().setGuestName(e.target.value)}
                     maxLength={20}
