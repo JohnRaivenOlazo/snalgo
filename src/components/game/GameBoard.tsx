@@ -215,31 +215,35 @@ const GameBoard: React.FC = () => {
 
   const gameOver = useCallback(
     async (message = "") => {
-      let submissionStatus: "new_high" | "submitted" | "not_submitted" =
-        "not_submitted";
+      let submissionStatus: "new_high" | "submitted" | "not_submitted" = "not_submitted";
+      const currentScore = stats.score;
 
-      if (useSessionStore.getState().hasValidName) {
-        submissionStatus = await LeaderboardService.submitScore(
-          stats.score,
-          stats.level
-        );
+      // Only submit if score is in top 10 potential
+      if (useSessionStore.getState().hasValidName && currentScore > 0) {
+        // Get current top scores to validate submission
+        const topScores = await LeaderboardService.getTopScores(10);
+        const lowestTopScore = topScores[topScores.length - 1]?.score || 0;
+        
+        // Only submit if score is in top 10 or there's empty slots
+        if (currentScore > lowestTopScore || topScores.length < 10) {
+          submissionStatus = await LeaderboardService.submitScore(currentScore, stats.level);
+        }
       }
 
       setGameState(GameState.GAME_OVER);
       if (message) toast.error(message);
 
+      // Only show success toast for new high scores
       if (submissionStatus === "new_high") {
-        toast.success("New high score submitted to leaderboard! 🏆");
-      } else if (submissionStatus === "submitted") {
-        toast.success("Score submitted to leaderboard!");
+        toast.success("New galactic record achieved! 🏆");
       }
 
-      // Update high score logic
-      const currentHigh = Math.max(stats.highScore, stats.score);
-      if (stats.score > stats.highScore) {
+      // Update local high score logic
+      const currentHigh = Math.max(stats.highScore, currentScore);
+      if (currentScore > stats.highScore) {
         localStorage.setItem("snakeHighScore", currentHigh.toString());
         setStats((prev) => ({ ...prev, highScore: currentHigh }));
-        toast.success(`New high score: ${currentHigh}`);
+        toast.success(`Personal best: ${currentHigh}`);
       }
     },
     [stats.score, stats.highScore, stats.level]
@@ -353,7 +357,8 @@ const GameBoard: React.FC = () => {
     const totalWeight = inventory.reduce((sum, item) => sum + item.weight, 0);
 
     // Immediate weight check before processing movement
-    if (totalWeight >= useGameStore.getState().capacity) {
+    if (totalWeight > useGameStore.getState().capacity) {
+      setGameState(GameState.GAME_OVER);
       gameOver(`Capacity exceeded! (${totalWeight}/${currentThreshold})`);
       return;
     }
@@ -415,6 +420,7 @@ const GameBoard: React.FC = () => {
       willHitWall(head, newDirection, gridSizeX, gridSizeY) ||
       willHitSelf(newHead, snake)
     ) {
+      setGameState(GameState.GAME_OVER);
       gameOver();
       return;
     }
@@ -474,14 +480,15 @@ const GameBoard: React.FC = () => {
 
     if (eatenCollectible) {
       const newWeight = currentWeightRef.current + eatenCollectible.weight;
-      const currentThreshold =
-        BASE_WEIGHT_THRESHOLD + (stats.level - 1) * WEIGHT_THRESHOLD_INCREMENT;
+      const capacity = useGameStore.getState().capacity;
 
-      if (newWeight > currentThreshold) {
-        gameOver(`Capacity exceeded! (${newWeight}/${currentThreshold})`);
+      if (newWeight > capacity) {
+        setGameState(GameState.GAME_OVER);
+        gameOver(`Capacity exceeded! (${newWeight}/${capacity})`);
         return;
       }
 
+      // Update stats first
       setStats((prev) => ({
         ...prev,
         collectiblesCollected: prev.collectiblesCollected + 1,
@@ -495,12 +502,12 @@ const GameBoard: React.FC = () => {
         (c) => c.id !== eatenCollectible.id
       );
 
-      if (newWeight <= currentThreshold) {
+      // Check using the same capacity value
+      if (newWeight <= capacity) {
         setInventory((prev) => [
           ...prev,
           collectibleToInventoryItem(eatenCollectible),
         ]);
-        setStats((prev) => ({ ...prev, inventoryCurrentWeight: newWeight }));
       } else {
         toast.error("Inventory full! Collectible not stored.");
       }

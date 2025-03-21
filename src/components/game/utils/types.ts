@@ -35,7 +35,6 @@ export interface Collectible {
   weight: number;
   type: CollectibleType;
   color: string;
-  quantity: number;
 }
 
 export interface FoodProps {
