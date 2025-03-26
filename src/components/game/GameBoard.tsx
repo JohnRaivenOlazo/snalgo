@@ -1323,13 +1323,6 @@ const GameBoard: React.FC = () => {
       </div>
 
       <MobileControls />
-
-      <PixelButton 
-        onClick={() => sound.current?.play()}
-        className="mt-4"
-      >
-        Test Music
-      </PixelButton>
     </div>
   );
 };
