@@ -777,24 +777,24 @@ const GameBoard: React.FC = () => {
     <PixelatedContainer className="p-4 bg-gradient-to-br from-gray-900/80 to-gray-800/90 backdrop-blur-sm">
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center gap-3 p-2 bg-black/20 rounded-sm border border-white/5">
-          <div className="relative">
-            <Star className="text-green-400 w-6 h-6 animate-pulse-slow" />
-            <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-[6px]" />
+        <div className="relative">
+            <Trophy className="text-purple-400 w-6 h-6 animate-bounce-slow" />
+            <div className="absolute inset-0 bg-purple-400/20 rounded-full blur-[6px]" />
           </div>
-          <div>
-            <p className="font-pixel text-xs text-white/70 mb-1">SCORE</p>
-            <p className="font-pixel text-lg text-green-400">{stats.score}</p>
+          <div className="text-center">
+            <p className="font-pixel text-xs text-white/70 mb-1">LEVEL</p>
+            <p className="font-pixel text-lg text-purple-400">{stats.level}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 p-2 bg-black/20 rounded-sm border border-white/5">
-          <div className="relative">
-            <Trophy className="text-purple-400 w-6 h-6 animate-bounce-slow" />
-            <div className="absolute inset-0 bg-purple-400/20 rounded-full blur-[6px]" />
+        <div className="relative">
+            <Star className="text-green-400 w-6 h-6 animate-pulse-slow" />
+            <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-[6px]" />
           </div>
-          <div>
-            <p className="font-pixel text-xs text-white/70 mb-1">LEVEL</p>
-            <p className="font-pixel text-lg text-purple-400">{stats.level}</p>
+          <div className="text-center">
+            <p className="font-pixel text-xs text-white/70 mb-1">SCORE</p>
+            <p className="font-pixel text-lg text-green-400">{stats.score}</p>
           </div>
         </div>
       </div>
