@@ -229,8 +229,9 @@ const GameBoard: React.FC = () => {
       return;
     }
 
-    // Play sound directly when starting game
-    if (sound.current && !sound.current.playing()) {
+    // Stop and reset the sound before playing
+    if (sound.current) {
+      sound.current.stop();
       sound.current.play();
     }
 
