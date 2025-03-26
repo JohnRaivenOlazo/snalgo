@@ -123,10 +123,6 @@ Got ideas? Found a bug? Let's make SNALGO even better!
 
 MIT - Go wild! Just remember to give credit where it's due. 🙌
 
-## 🎵 Credits
+##
 
 - Built with ❤️ using Next.js and an unhealthy amount of coffee ☕
-
----
-
-*Remember: In SNALGO, every pixel tells a story, and every algorithm is an adventure! 🚀*
