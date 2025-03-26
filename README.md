@@ -52,6 +52,13 @@ Ever wondered what would happen if the classic Snake game had a caffeine overdos
 
 ### Data & Storage
 - **Supabase** - Backend as a Service
+  - Real-time leaderboard updates
+  - User authentication and profiles
+  - PostgreSQL database with row-level security
+- **PostgreSQL** - Advanced SQL database features
+  - Complex leaderboard queries
+  - JSON storage for game states
+  - Full-text search capabilities
 - **UUID** - Unique identifiers
 
 ### Tooling
