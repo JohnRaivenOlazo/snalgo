@@ -1148,7 +1148,7 @@ const GameBoard: React.FC = () => {
                     </div>
                     <input
                       type="text"
-                      placeholder="ENTER CODENAME"
+                      placeholder="Nickname"
                       className="font-pixel w-full p-4 bg-black/70 text-white text-center border-4 border-white/30 rounded-lg 
                                focus:outline-none focus:border-primary focus:ring-0
                                transition-all duration-300 placeholder-white/50 pixelated-input"
@@ -1164,7 +1164,7 @@ const GameBoard: React.FC = () => {
                       className="w-full transform hover:scale-105 transition-all 
                                bg-gradient-to-r from-green-500 to-blue-600 shadow-2xl pixelated"
                     >
-                      START MISSION
+                      Play
                     </PixelButton>
                   </div>
                 </motion.div>
@@ -1193,7 +1193,7 @@ const GameBoard: React.FC = () => {
                     <h2 className="font-pixel text-4xl mb-4 bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent">
                       {gameState === GameState.WIN
                         ? "MISSION ACCOMPLISHED"
-                        : "SYSTEM FAILURE"}
+                        : "Game Over"}
                     </h2>
 
                     {/* Stats Grid */}
@@ -1243,7 +1243,7 @@ const GameBoard: React.FC = () => {
                     >
                       {gameState === GameState.WIN
                         ? "NEXT WARP JUMP"
-                        : "REBOOT SYSTEMS"}
+                        : "Play Again"}
                     </PixelButton>
                   </div>
                 </motion.div>
