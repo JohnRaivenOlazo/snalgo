@@ -229,21 +229,8 @@ const GameBoard: React.FC = () => {
       return;
     }
 
-    // Create a temporary click handler for audio unlock
-    const handleFirstClick = () => {
-      if (sound.current && !sound.current.playing()) {
-        sound.current.play();
-      }
-      document.removeEventListener('click', handleFirstClick);
-    };
-
-    // Add click listener to unlock audio
-    document.addEventListener('click', handleFirstClick);
-
-    // Restart music properly
-    if (sound.current) {
-      sound.current.stop();
-      sound.current.seek(0); // Reset to beginning
+    // Play sound directly when starting game
+    if (sound.current && !sound.current.playing()) {
       sound.current.play();
     }
 
@@ -782,63 +769,7 @@ const GameBoard: React.FC = () => {
 
   const guestName = useSessionStore((state) => state.guestName);
 
-  // Update leaderboard section
-  const LeaderboardSection = () => (
-    <div className="relative bg-gradient-to-br from-gray-900/80 to-gray-800/90 backdrop-blur-lg rounded-lg p-3 shadow-2xl border-2 border-white/10">
-      <div className="absolute inset-0 bg-noise-texture opacity-20 pointer-events-none" />
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-pixel text-white/90 text-sm tracking-wider flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-yellow-400" />
-          LEADERBOARD
-        </h3>
-        <button
-          onClick={async () => {
-            await LeaderboardService.getTopScores(10).then(setTopScores);
-            toast.success("Leaderboard refreshed!");
-          }}
-          className="text-white/70 hover:text-white/100 transition-all group"
-          title="Refresh leaderboard"
-        >
-          <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
-        </button>
-      </div>
-      <div className="space-y-2 sm:max-h-full max-h-[300px] overflow-y-auto scrollbar-style">
-        {topScores.map((entry) => (
-          <div
-            key={entry.id}
-            className="relative bg-gradient-to-r from-gray-800/50 to-gray-900/30 p-2 rounded-md 
-                     border border-white/5 hover:border-primary/50 transition-all group"
-          >
-            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <span className="font-pixel text-white/80 text-xs w-6 text-center">
-                  {entry.rank === 1
-                    ? "🥇"
-                    : entry.rank === 2
-                    ? "🥈"
-                    : entry.rank === 3
-                    ? "🥉"
-                    : `#${entry.rank}`}
-                </span>
-                <span className="text-white/80 text-xs font-pixel truncate max-w-[100px]">
-                  {entry.username}
-                </span>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="font-pixel text-yellow-300/90 text-[11px] leading-none mb-1">
-                  LV.{entry.level}
-                </span>
-                <span className="font-pixel text-green-400/90 text-sm bg-black/30 px-2 py-1 rounded-sm">
-                  {entry.score.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+
 
   // Enhanced stats display
   const StatsDisplay = () => (
@@ -846,12 +777,12 @@ const GameBoard: React.FC = () => {
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center gap-3 p-2 bg-black/20 rounded-sm border border-white/5">
           <div className="relative">
-            <Star className="text-yellow-400 w-6 h-6 animate-pulse-slow" />
+            <Star className="text-green-400 w-6 h-6 animate-pulse-slow" />
             <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-[6px]" />
           </div>
           <div>
             <p className="font-pixel text-xs text-white/70 mb-1">SCORE</p>
-            <p className="font-pixel text-lg text-yellow-400">{stats.score}</p>
+            <p className="font-pixel text-lg text-green-400">{stats.score}</p>
           </div>
         </div>
 
@@ -974,7 +905,60 @@ const GameBoard: React.FC = () => {
 
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 px-0 md:p-4 bg-noise-texture">
-      <LeaderboardSection />
+          <div className="relative bg-gradient-to-br from-gray-900/80 to-gray-800/90 backdrop-blur-lg rounded-lg p-3 shadow-2xl border-2 border-white/10">
+      <div className="absolute inset-0 bg-noise-texture opacity-20 pointer-events-none" />
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-pixel text-white/90 text-sm tracking-wider flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-yellow-400" />
+          LEADERBOARD
+        </h3>
+        <button
+          onClick={async () => {
+            await LeaderboardService.getTopScores(10).then(setTopScores);
+            toast.success("Leaderboard refreshed!");
+          }}
+          className="text-white/70 hover:text-white/100 transition-all group"
+          title="Refresh leaderboard"
+        >
+          <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+        </button>
+      </div>
+      <div className="space-y-2 sm:max-h-full max-h-[300px] overflow-y-auto scrollbar-style">
+        {topScores.map((entry) => (
+          <div
+            key={entry.id}
+            className="relative bg-gradient-to-r from-gray-800/50 to-gray-900/30 p-2 rounded-md 
+                     border border-white/5 hover:border-primary/50 transition-all group"
+          >
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1">
+                <span className="font-pixel text-yellow-400 text-[9px] w-6 text-center">
+                  {entry.rank === 1
+                    ? "🥇"
+                    : entry.rank === 2
+                    ? "🥈"
+                    : entry.rank === 3
+                    ? "🥉"
+                    : entry.rank}
+                </span>
+                <span className="text-white/80 text-xs font-pixel truncate max-w-[100px]">
+                  {entry.username}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-pixel text-purple-300/90 text-[10px] leading-none">
+                  LV.{entry.level}
+                </span>
+                <span className="font-pixel text-green-400/90 text-sm bg-black/30 px-2 rounded-sm">
+                  {entry.score.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
 
       <div
         className="md:col-span-2 relative"
