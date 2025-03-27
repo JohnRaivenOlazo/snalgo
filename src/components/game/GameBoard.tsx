@@ -943,15 +943,15 @@ const GameBoard: React.FC = () => {
                     ? "🥉"
                     : entry.rank}
                 </span>
-                <span className="text-white/80 text-xs font-pixel truncate max-w-[100px]">
+                <span className="text-white/80 text-[9px] font-pixel truncate max-w-[100px]">
                   {entry.username}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex justify-between gap-2">
                 <span className="font-pixel text-purple-300/90 text-[10px] leading-none">
                   LV.{entry.level}
                 </span>
-                <span className="font-pixel text-green-400/90 text-sm bg-black/30 px-2 rounded-sm">
+                <span className="font-pixel text-green-400/90 text-xs bg-black/30 px-2 rounded-sm">
                   {entry.score.toLocaleString()}
                 </span>
               </div>
