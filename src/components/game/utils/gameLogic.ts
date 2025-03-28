@@ -188,18 +188,21 @@ export const generateCollectible = (
   const type = weightedRandom(CollectibleType, typeWeights);
   
   // Dynamic weight calculation based on capacity
-  const maxPossibleWeight = forceValid ? capacity : Math.min(
-    capacity + 5,
-    BASE_WEIGHT_THRESHOLD + (level * WEIGHT_THRESHOLD_INCREMENT)
-  );
+  const maxPossibleWeight = forceValid 
+    ? Math.floor(capacity * 0.8) // If forcing valid, use 80% of capacity
+    : Math.min(
+        Math.floor(capacity * 0.9), // Never exceed 90% of capacity
+        BASE_WEIGHT_THRESHOLD + (level * WEIGHT_THRESHOLD_INCREMENT)
+    );
   
+  const minWeight = Math.ceil(maxPossibleWeight * 0.2); // At least 20% of max weight
   const weight = forceValid 
-    ? Math.floor(capacity * 0.8)
-    : Math.floor(Math.random() * maxPossibleWeight) + 1;
+    ? maxPossibleWeight
+    : Math.floor(Math.random() * (maxPossibleWeight - minWeight + 1)) + minWeight;
 
   // Balanced value calculation
-  const baseValue = Math.floor(weight * 0.8); // Reduced from weight multiplier
-  const levelBonus = Math.floor(baseValue * (level * 0.1)); // Reduced from 20% to 10% per level
+  const baseValue = Math.floor(weight * 1.2); // Increased value multiplier
+  const levelBonus = Math.floor(baseValue * (level * 0.15)); // Increased level bonus
   const value = baseValue + levelBonus;
 
   return {
