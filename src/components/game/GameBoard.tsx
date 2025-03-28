@@ -18,8 +18,8 @@ import {
 import Snake from "./Snake";
 import Food from "./Food";
 import Inventory from "./Inventory";
-import PixelatedContainer from "../ui/PixelatedContainer";
-import PixelButton from "../ui/PixelButton";
+import PixelatedContainer from "../PixelatedContainer";
+import PixelButton from "../PixelButton";
 import { toast } from "sonner";
 import {
   createInitialSnake,
@@ -1230,7 +1230,7 @@ const GameBoard: React.FC = () => {
                     {stats.score === stats.highScore && (
                       <div className="animate-bounce-slow bg-gradient-to-r from-yellow-500 to-amber-600 p-2 rounded-full">
                         <span className="font-pixel text-sm">
-                          🏆 NEW GALACTIC RECORD 🏆
+                          🏆 NEW RECORD 🏆
                         </span>
                       </div>
                     )}

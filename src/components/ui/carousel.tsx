@@ -4,7 +4,7 @@ import * as React from "react"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import useEmblaCarousel from "embla-carousel-react"
 import { cn } from "@/lib/utils"
-import PixelButton from "./PixelButton"
+import PixelButton from "../PixelButton"
 
 // Type definitions for the carousel component
 type CarouselApi = {

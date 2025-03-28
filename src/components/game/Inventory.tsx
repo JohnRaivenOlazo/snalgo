@@ -3,7 +3,7 @@ import {
   InventoryItem,
   CollectibleType,
 } from "@/components/game/utils/types";
-import PixelButton from "../ui/PixelButton";
+import PixelButton from "../PixelButton";
 import {
   ArrowUpDown,
   Search,

@@ -6,7 +6,7 @@ import { Coins, Trophy, ScrollText, Menu, X } from 'lucide-react';
 import { useGameStore } from "@/stores/useGameStore";
 import { useSessionStore } from "@/stores/session";
 import { motion, AnimatePresence } from "framer-motion";
-import PixelButton from "./ui/PixelButton";
+import PixelButton from "./PixelButton";
 
 const Navbar = () => {
   const { coins } = useGameStore();
