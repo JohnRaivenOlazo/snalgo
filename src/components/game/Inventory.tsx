@@ -9,7 +9,7 @@ import {
   Diamond,
   Star,
   Zap,
-  Package
+  Package,
 } from "lucide-react";
 import {
   bubbleSort,
@@ -183,7 +183,7 @@ const Inventory: React.FC<InventoryProps> = ({
       )}
     >
       <div className="col-span-2 p-3 bg-black/30 rounded-sm border border-white/5">
-        <div className="flex justify-between text-xs font-pixel text-white/70 mb-2">
+        <div className="flex justify-between text-xs font-pixel text-blue-300 mb-2">
           <span>INVENTORY</span>
           <span>
             {currentWeight}/{useGameStore.getState().capacity}kg

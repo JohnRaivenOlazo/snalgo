@@ -96,7 +96,7 @@ const GameBoard: React.FC = () => {
   const directionQueue = useRef<Direction[]>([]);
   const directionRef = useRef(direction);
 
-  const { addCoins, coins, upgradeInventoryCapacity } = useGameStore();
+  const { addCoins, upgradeInventoryCapacity } = useGameStore();
 
   const currentWeightRef = useRef(stats.inventoryCurrentWeight);
   useEffect(() => {
@@ -1104,14 +1104,11 @@ const GameBoard: React.FC = () => {
                                  bg-black/90 px-1.5 py-[3px] rounded-sm border 
                                  border-white/20 flex gap-1.5"
                   >
-                    <span className="text-[8px] font-pixel text-yellow-300 leading-none">
+                    <span className="text-[8px] font-pixel text-green-400 leading-none">
                       {collectible.value}
-                    </span>
-                    <span className="text-[8px] font-pixel text-white/80 leading-none">
-                      |
-                    </span>
+                    </span><span className="text-[8px] font-pixel text-white/80 leading-none">|</span>
                     <span className="text-[8px] font-pixel text-blue-300 leading-none">
-                      {collectible.weight}
+                      {collectible.weight}kg
                     </span>
                   </div>
                 </div>
@@ -1199,38 +1196,24 @@ const GameBoard: React.FC = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 gap-4 font-pixel">
                       <div className="p-4 bg-black/30 rounded-lg border border-white/10">
-                        <p className="text-sm text-white/70 mb-1">SCORE</p>
-                        <p className="text-2xl text-yellow-400">
-                          {stats.score}
-                        </p>
-                      </div>
-                      <div className="p-4 bg-black/30 rounded-lg border border-white/10">
                         <p className="text-sm text-white/70 mb-1">LEVEL</p>
                         <p className="text-2xl text-purple-400">
                           {stats.level}
                         </p>
                       </div>
-                      {gameState === GameState.WIN && (
-                        <>
-                          <div className="p-4 bg-black/30 rounded-lg border border-white/10">
-                            <p className="text-sm text-white/70 mb-1">FOOD</p>
-                            <p className="text-2xl text-green-400">
-                              {stats.foodEaten}
-                            </p>
-                          </div>
-                          <div className="p-4 bg-black/30 rounded-lg border border-white/10">
-                            <p className="text-sm text-white/70 mb-1">VALUE</p>
-                            <p className="text-2xl text-cyan-400">{coins}</p>
-                          </div>
-                        </>
-                      )}
+                      <div className="p-4 bg-black/30 rounded-lg border border-white/10">
+                        <p className="text-sm text-white/70 mb-1">SCORE</p>
+                        <p className="text-2xl text-green-400">
+                          {stats.score}
+                        </p>
+                      </div>
                     </div>
 
                     {/* High Score Badge */}
                     {stats.score === stats.highScore && (
                       <div className="animate-bounce-slow bg-gradient-to-r from-yellow-500 to-amber-600 p-2 rounded-full">
                         <span className="font-pixel text-sm">
-                          🏆 NEW RECORD 🏆
+                          🏆 NEW RECORD! 🏆
                         </span>
                       </div>
                     )}
