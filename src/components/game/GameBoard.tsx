@@ -201,6 +201,8 @@ const GameBoard: React.FC = () => {
 
   const sound = useRef<Howl | null>(null);
   const deathSound = useRef<Howl | null>(null);
+  const eatFoodSound = useRef<Howl | null>(null);
+  const collectibleSound = useRef<Howl | null>(null);
 
   useEffect(() => {
     sound.current = new Howl({
@@ -216,11 +218,27 @@ const GameBoard: React.FC = () => {
       preload: true
     });
 
+    eatFoodSound.current = new Howl({
+      src: ["/eat_food.mp3"],
+      volume: 0.4,
+      preload: true
+    });
+
+    collectibleSound.current = new Howl({
+      src: ["/eat_collectibles.mp3"],
+      volume: 0.5,
+      preload: true
+    });
+
     return () => {
       sound.current?.unload();
       deathSound.current?.unload();
+      eatFoodSound.current?.unload();
+      collectibleSound.current?.unload();
       sound.current = null;
       deathSound.current = null;
+      eatFoodSound.current = null;
+      collectibleSound.current = null;
     };
   }, []);
 
@@ -503,6 +521,7 @@ const GameBoard: React.FC = () => {
 
     // Modified logic for handling food and collectibles
     if (eatenFood) {
+      eatFoodSound.current?.play();
       // Remove the eaten food
       const newFood = food.filter((f) => f.id !== eatenFood.id);
 
@@ -545,11 +564,13 @@ const GameBoard: React.FC = () => {
       const capacity = useGameStore.getState().capacity;
 
       if (newWeight > capacity) {
+        deathSound.current?.play();
         setGameState(GameState.GAME_OVER);
         gameOver(`Capacity exceeded! (${newWeight}/${capacity})`);
         return;
       }
 
+      collectibleSound.current?.play();
       // Update stats first
       setStats((prev) => ({
         ...prev,
