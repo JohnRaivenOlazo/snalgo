@@ -53,8 +53,6 @@ export const tspNearestNeighbor = (
   start: Position,
   destinations: Position[]
 ): Position[] => {
-  if (destinations.length === 0) return [];
-  
   const result: Position[] = [start];
   const unvisited = [...destinations];
   let current = start;

@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  InventoryItem,
-  CollectibleType,
-} from "@/components/game/utils/types";
+import { InventoryItem, CollectibleType } from "@/components/game/utils/types";
 import PixelButton from "../PixelButton";
 import {
   ArrowUpDown,
@@ -12,8 +9,7 @@ import {
   Diamond,
   Star,
   Zap,
-  Package,
-  Lightbulb,
+  Package
 } from "lucide-react";
 import {
   bubbleSort,
@@ -38,10 +34,8 @@ const Inventory: React.FC<InventoryProps> = ({
   items,
   currentWeight,
   totalValue,
-  className
+  className,
 }) => {
-  const { capacity } = useGameStore();
-
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [sortSteps, setSortSteps] = useState<SortStep<InventoryItem>[]>([]);
   const [currentSortStep, setCurrentSortStep] = useState<number>(-1);
@@ -80,7 +74,7 @@ const Inventory: React.FC<InventoryProps> = ({
 
     if (items.length === 0) {
       toast.error("No collectibles to sort!", {
-        icon: <Package size={14} className="text-red-500" />
+        icon: <Package size={14} className="text-red-500" />,
       });
       return;
     }
@@ -88,11 +82,14 @@ const Inventory: React.FC<InventoryProps> = ({
     const newOrder = sortOrder === "asc" ? "desc" : "asc";
     setSortOrder(newOrder);
 
-    toast.success(`Sorted by ${
-      sortBy.charAt(0).toUpperCase() + sortBy.slice(1)
-    } (${newOrder === 'asc' ? 'Ascending' : 'Descending'})`, {
-      icon: <ArrowUpDown size={14} className="text-primary" />
-    });
+    toast.success(
+      `Sorted by ${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)} (${
+        newOrder === "asc" ? "Ascending" : "Descending"
+      })`,
+      {
+        icon: <ArrowUpDown size={14} className="text-primary" />,
+      }
+    );
 
     setSearchSteps([]);
     setCurrentSearchStep(-1);
@@ -179,22 +176,34 @@ const Inventory: React.FC<InventoryProps> = ({
       : filteredItems;
 
   return (
-    <div 
-      className={cn("w-full h-full flex flex-col gap-2 mt-4 md:mt-0 relative overflow-hidden p-4", className)}
+    <div
+      className={cn(
+        "w-full h-full flex flex-col gap-2 mt-4 md:mt-0 relative overflow-hidden p-4",
+        className
+      )}
     >
-              <div className="col-span-2 p-3 bg-black/30 rounded-sm border border-white/5">
-          <div className="flex justify-between text-xs font-pixel text-white/70 mb-2">
-            <span>INVENTORY</span>
-            <span>{currentWeight}/{useGameStore.getState().capacity}kg</span>
-          </div>
-          <div className="relative h-2 bg-black/50 rounded-full overflow-hidden">
-            <div 
-              className="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500"
-              style={{ width: `${(currentWeight / useGameStore.getState().capacity) * 100}%` }}
-            />
-            <div className="absolute inset-0 bg-noise-texture opacity-20" />
-          </div>
+      <div className="col-span-2 p-3 bg-black/30 rounded-sm border border-white/5">
+        <div className="flex justify-between text-xs font-pixel text-white/70 mb-2">
+          <span>INVENTORY</span>
+          <span>
+            {currentWeight}/{useGameStore.getState().capacity}kg
+          </span>
         </div>
+        <div className="relative h-2 bg-black/50 rounded-full overflow-hidden">
+          <div
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500"
+            style={{
+              width: `${
+                (currentWeight / useGameStore.getState().capacity) * 100
+              }%`,
+            }}
+          />
+          <div className="absolute inset-0 bg-noise-texture opacity-20" />
+        </div>
+        <div className="text-center font-pixel text-[9px] pt-2 text-green-400">
+          Total Value {totalValue}
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-2 mt-2">
         <div className="flex items-center gap-2">
@@ -257,16 +266,6 @@ const Inventory: React.FC<InventoryProps> = ({
             )}
           </div>
         </div>
-      </div>
-
-      <div className="flex justify-between items-center mt-4 pt-0">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="text-green-400" size={16} />
-          <span className="font-pixel text-sm text-white">Total Value</span>
-        </div>
-        <span className="font-pixel text-lg text-green-400">
-          {totalValue}
-        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto mt-2 relative">
@@ -357,14 +356,6 @@ const Inventory: React.FC<InventoryProps> = ({
             <Coins size={8} className="text-yellow-400" />
           </div>
         </div>
-      </div>
-
-      <div className="w-full h-2 bg-muted mt-2 relative overflow-hidden rounded-full">
-        <div
-          className="h-full bg-linear-to-r from-primary/70 to-primary transition-all duration-300"
-          style={{ width: `${(currentWeight / capacity) * 100}%` }}
-        />
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMCAwaDQwdjRIMHoiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==')]"></div>
       </div>
     </div>
   );
