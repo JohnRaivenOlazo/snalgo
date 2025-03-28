@@ -824,66 +824,6 @@ const GameBoard: React.FC = () => {
     </div>
   );
 
-  // Enhanced mobile controls with TSP button
-  const MobileControls = () => (
-    <div className="md:hidden fixed bottom-4 left-0 right-0 px-4 z-[1000]">
-      <div className="relative bg-black/30 backdrop-blur-lg rounded-2xl p-2 shadow-2xl">
-        <div className="grid grid-cols-3 gap-2 items-center justify-center">
-          {/* TSP Button */}
-          <div className="col-span-3 flex justify-center mb-2">
-            <PixelButton
-              onClick={calculateHint}
-              disabled={
-                gameState !== GameState.PLAYING ||
-                (food.length === 0 &&
-                  collectibles.length === 0 &&
-                  !hintActiveRef.current)
-              }
-              variant={hintActiveRef.current ? "glow" : "default"}
-              className="w-full max-w-[200px] h-12 transform active:scale-95 transition-transform"
-            >
-              <Lightbulb size={18} className="mr-2 text-yellow-400" />
-              <span className="font-pixel text-sm">
-                {hintActiveRef.current ? "ACTIVE PATH" : "OPTIMIZE ROUTE"}
-              </span>
-              {hintActiveRef.current && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                </div>
-              )}
-            </PixelButton>
-          </div>
-
-          {/* Directional Controls */}
-          <div className="col-start-2 flex justify-center">
-            <PixelButton
-              onClick={() => handleDirectionButton(Direction.UP)}
-              className="w-16 h-16 active:scale-90 transition-transform"
-              variant="glow"
-            >
-              <ChevronUp size={28} />
-            </PixelButton>
-          </div>
-
-          <div className="col-span-3 flex justify-between mt-2">
-            {[Direction.LEFT, Direction.DOWN, Direction.RIGHT].map((dir) => (
-              <PixelButton
-                key={dir}
-                onClick={() => handleDirectionButton(dir)}
-                className="w-16 h-16 active:scale-90 transition-transform"
-                variant="secondary"
-              >
-                {dir === Direction.LEFT && <ChevronLeft size={28} />}
-                {dir === Direction.DOWN && <ChevronDown size={28} />}
-                {dir === Direction.RIGHT && <ChevronRight size={28} />}
-              </PixelButton>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   // Update game over/win effect
   useEffect(() => {
     if (gameState === GameState.GAME_OVER || gameState === GameState.WIN) {
@@ -1290,7 +1230,62 @@ const GameBoard: React.FC = () => {
         </div>
       </div>
 
-      <MobileControls />
+      <div className="md:hidden fixed bottom-4 left-0 right-0 px-4 z-[1000]">
+      <div className="relative bg-black/30 backdrop-blur-lg rounded-2xl p-2 shadow-2xl">
+        <div className="grid grid-cols-3 gap-2 items-center justify-center">
+          {/* TSP Button */}
+          <div className="col-span-3 flex justify-center mb-2">
+            <PixelButton
+              onClick={calculateHint}
+              disabled={
+                gameState !== GameState.PLAYING ||
+                (food.length === 0 &&
+                  collectibles.length === 0 &&
+                  !hintActiveRef.current)
+              }
+              variant={hintActiveRef.current ? "glow" : "default"}
+              className="w-full max-w-[200px] h-12 transform active:scale-95 transition-transform"
+            >
+              <Lightbulb size={18} className="mr-2 text-yellow-400" />
+              <span className="font-pixel text-xs p-2">
+                {hintActiveRef.current ? "ACTIVE PATH" : "OPTIMIZE ROUTE"}
+              </span>
+              {hintActiveRef.current && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                </div>
+              )}
+            </PixelButton>
+          </div>
+
+          {/* Directional Controls */}
+          <div className="col-start-2 flex justify-center">
+            <PixelButton
+              onClick={() => handleDirectionButton(Direction.UP)}
+              className="w-10 h-10 active:scale-90 transition-transform"
+              variant="glow"
+            >
+              <ChevronUp size={28} />
+            </PixelButton>
+          </div>
+
+          <div className="col-span-3 flex gap-2 justify-center">
+            {[Direction.LEFT, Direction.DOWN, Direction.RIGHT].map((dir) => (
+              <PixelButton
+                key={dir}
+                onClick={() => handleDirectionButton(dir)}
+                className="w-10 h-10 active:scale-90 transition-transform"
+                variant="secondary"
+              >
+                {dir === Direction.LEFT && <ChevronLeft size={28} />}
+                {dir === Direction.DOWN && <ChevronDown size={28} />}
+                {dir === Direction.RIGHT && <ChevronRight size={28} />}
+              </PixelButton>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
     </div>
   );
 };

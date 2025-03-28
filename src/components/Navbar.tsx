@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Coins, Trophy, ScrollText, Menu, X } from 'lucide-react';
@@ -12,8 +12,6 @@ const Navbar = () => {
   const { coins } = useGameStore();
   const { guestName } = useSessionStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
 
 
   const newsItems = [
@@ -23,32 +21,8 @@ const Navbar = () => {
     "Knapsack Problem",
   ];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      setScrollProgress((winScroll / height) * 100);
-      setIsScrolling(true);
-      setTimeout(() => setIsScrolling(false), 2000);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-gradient-to-b from-gray-900/90 to-gray-900/50 border-b border-white/10 shadow-2xl shadow-primary/10">
-      {/* Animated Progress Bar */}
-      <div className="absolute bottom-0 h-1 bg-primary/20 w-full">
-        <motion.div
-          className="h-full bg-gradient-to-r from-green-400 to-blue-500"
-          initial={{ width: 0 }}
-          animate={{ width: `${scrollProgress}%` }}
-          transition={{ duration: 0.5 }}
-        />
-        <div className={`absolute -top-1 right-4 w-2 h-2 rounded-full bg-primary ${isScrolling ? 'animate-ping' : ''}`} />
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
