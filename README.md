@@ -10,7 +10,7 @@
 
 > 🎮 OG Snake Game + 🧮 Algorithm Visualizations = 🌟 Mind-Bending Fun!
 
-Ever wondered what would happen if the classic Snake game had a caffeine overdose and decided to teach computer science? Welcome to SNALGO - where pixels meet algorithms, and nostalgia gets a PhD upgrade! 🚀
+SNALGO is what you get when the classic Snake game collides with computer science. It's part fun, part learning, and all pixels. 🚀
 
 ## 🌟 Features
 
